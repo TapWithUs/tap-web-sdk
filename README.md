@@ -13,16 +13,33 @@ This SDK uses the [Web Bluetooth API](https://developer.mozilla.org/en-US/docs/W
 
 ## Installation
 
+### For Development
+
+Clone the repository and build the SDK:
+
 ```bash
-npm install tap-sdk-web
+git clone https://github.com/TapWithUs/tap-web-sdk.git
+cd tap-web-sdk
+npm install
+npm run build
 ```
 
-Or include directly via CDN:
+### Using in Your Project
 
-```html
-<script type="module">
-    import { TapSDKWeb } from 'https://unpkg.com/tap-sdk-web/dist/tap-sdk-web.bundle.js';
-</script>
+Link the SDK locally for development:
+
+```bash
+# In the tap-web-sdk directory
+npm link
+
+# In your project directory
+npm link tap-sdk-web
+```
+
+Or install directly from the local path:
+
+```bash
+npm install /path/to/tap-web-sdk
 ```
 
 ## Quick Start
@@ -195,21 +212,58 @@ tap.registerAirGestureEvents((identifier, gesture) => {
 await tap.sendVibrationSequence([100, 200, 100, 200, 500]);
 ```
 
-## Example
+## Testing the Example Locally
 
-See the [examples/basic](./examples/basic/) directory for a complete working example.
+The SDK includes a complete working example in the [examples/basic](./examples/basic/) directory.
 
-To run the example:
+### Prerequisites
+
+- A Chromium-based browser (Chrome, Edge, or Opera)
+- A Tap Strap device
+- HTTPS or localhost (required for Web Bluetooth)
+
+### Steps to Run
+
+1. **Build the SDK**:
 
 ```bash
-# Build the SDK
 npm run build
+```
 
-# Serve the examples directory (requires a local server)
+This compiles the TypeScript source and creates the bundle at `dist/tap-sdk-web.bundle.js`.
+
+2. **Start a local web server**:
+
+```bash
+# Option 1: Using npx serve (no installation needed)
 npx serve .
 
-# Open http://localhost:3000/examples/basic/ in Chrome
+# Option 2: Using Python 3
+python3 -m http.server 8000
+
+# Option 3: Using Node.js http-server
+npx http-server -p 8000
 ```
+
+3. **Open the example in your browser**:
+
+- If using `serve`: Open [http://localhost:3000/examples/basic/](http://localhost:3000/examples/basic/)
+- If using Python or http-server: Open [http://localhost:8000/examples/basic/](http://localhost:8000/examples/basic/)
+
+4. **Test the SDK**:
+
+- Click "Connect to Tap" to open the browser's Bluetooth device picker
+- Select your Tap device
+- Try different input modes (Controller Mode recommended for testing)
+- Tap your fingers to see events in the log
+- Test haptic feedback with the "Send Vibration" button
+
+### Troubleshooting
+
+- **"Bluetooth not available"**: Make sure you're using Chrome, Edge, or Opera (not Safari/Firefox)
+- **"Connection failed"**: Ensure your Tap device is powered on and not connected to another device
+- **"HTTPS required"**: The example works on `localhost`, but if deploying, you need HTTPS
+- **No events appearing**: Try switching to Controller Mode - Text Mode may not generate tap events in the browser
 
 ## Development
 
