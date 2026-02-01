@@ -1,0 +1,39 @@
+{
+  "name": "tap-sdk-web",
+  "version": "0.1.0",
+  "description": "TapSDK for browsers using Web Bluetooth (Chromium-only)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && npm run bundle",
+    "bundle": "esbuild src/index.ts --bundle --format=esm --outfile=dist/tap-sdk-web.bundle.js --sourcemap",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "tap",
+    "tapstrap",
+    "tapxr",
+    "bluetooth",
+    "web-bluetooth",
+    "ble"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/web-bluetooth": "^0.0.21",
+    "esbuild": "^0.27.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}

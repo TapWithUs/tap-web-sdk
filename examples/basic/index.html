@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapSDK Web - Basic Example</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: #545b62;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #218838;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            margin: 4px 0;
+            line-height: 1.4;
+        }
+        .log-entry.tap { color: #4ec9b0; }
+        .log-entry.mouse { color: #9cdcfe; }
+        .log-entry.gesture { color: #ce9178; }
+        .log-entry.raw { color: #b5cea8; }
+        .log-entry.info { color: #dcdcaa; }
+        .log-entry.error { color: #f14c4c; }
+        .log-entry.state { color: #c586c0; }
+        .timestamp {
+            color: #6a9955;
+            margin-right: 8px;
+        }
+        .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #444;
+            font-size: 18px;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .log-filters label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 14px;
+        }
+        .log-filters input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>TapSDK Web - Basic Example</h1>
+
+    <div class="warning">
+        <strong>Note:</strong> Web Bluetooth requires a secure context (HTTPS) or localhost.
+        Works in Chromium-based browsers (Chrome, Edge, Opera).
+    </div>
+
+    <div id="status" class="status disconnected">
+        Status: Disconnected
+    </div>
+
+    <div class="section">
+        <h2>Connection</h2>
+        <div id="permittedDevices" class="mode-buttons" style="margin-bottom: 10px; display: none;">
+            <!-- Previously permitted devices will appear here -->
+        </div>
+        <div class="controls">
+            <button id="connectBtn" class="btn-primary">Connect to Tap</button>
+            <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Input Mode</h2>
+        <div class="mode-buttons">
+            <button id="textModeBtn" class="btn-secondary" disabled>Text Mode</button>
+            <button id="controllerModeBtn" class="btn-secondary" disabled>Controller Mode</button>
+            <button id="controllerTextModeBtn" class="btn-secondary" disabled>Controller + Text</button>
+            <button id="rawModeBtn" class="btn-secondary" disabled>Raw Mode</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Input Type (TapXR)</h2>
+        <div class="mode-buttons">
+            <button id="autoTypeBtn" class="btn-secondary" disabled>Auto</button>
+            <button id="mouseTypeBtn" class="btn-secondary" disabled>Mouse</button>
+            <button id="keyboardTypeBtn" class="btn-secondary" disabled>Keyboard</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Haptics</h2>
+        <div class="controls">
+            <button id="vibrateBtn" class="btn-success" disabled>Send Vibration</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Event Log</h2>
+        <div class="log-filters" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+            <span style="font-weight: 500;">Filter:</span>
+            <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
+            <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
+            <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
+            <label><input type="checkbox" class="log-filter" value="raw" checked> Raw Data</label>
+            <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
+            <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
+            <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
+            <button id="clearLogBtn" class="btn-secondary" style="margin-left: auto;">Clear Log</button>
+        </div>
+        <div id="log" class="log-container"></div>
+    </div>
+
+    <script type="module">
+        import {
+            TapSDKWeb,
+            InputModeText,
+            InputModeController,
+            InputModeControllerText,
+            InputModeRaw,
+            InputType,
+            AirGestures,
+            FingerAcclSensitivity,
+            ImuGyroSensitivity,
+            ImuAcclSensitivity,
+        } from '../../dist/tap-sdk-web.bundle.js';
+
+        const tap = new TapSDKWeb();
+
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const textModeBtn = document.getElementById('textModeBtn');
+        const controllerModeBtn = document.getElementById('controllerModeBtn');
+        const controllerTextModeBtn = document.getElementById('controllerTextModeBtn');
+        const rawModeBtn = document.getElementById('rawModeBtn');
+        const autoTypeBtn = document.getElementById('autoTypeBtn');
+        const mouseTypeBtn = document.getElementById('mouseTypeBtn');
+        const keyboardTypeBtn = document.getElementById('keyboardTypeBtn');
+        const vibrateBtn = document.getElementById('vibrateBtn');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const permittedDevicesEl = document.getElementById('permittedDevices');
+        const logFilters = document.querySelectorAll('.log-filter');
+
+        // Get currently enabled filters
+        function getEnabledFilters() {
+            const enabled = new Set();
+            logFilters.forEach(cb => {
+                if (cb.checked) enabled.add(cb.value);
+            });
+            return enabled;
+        }
+
+        // Apply filters to all log entries
+        function applyFilters() {
+            const enabled = getEnabledFilters();
+            const entries = logEl.querySelectorAll('.log-entry');
+            entries.forEach(entry => {
+                const type = entry.dataset.type || 'info';
+                entry.style.display = enabled.has(type) ? 'block' : 'none';
+            });
+        }
+
+        // Add filter change listeners
+        logFilters.forEach(cb => {
+            cb.addEventListener('change', applyFilters);
+        });
+
+        // Check for previously permitted devices
+        async function checkPermittedDevices() {
+            const devices = await tap.getPermittedDevices();
+            if (devices.length > 0) {
+                permittedDevicesEl.style.display = 'flex';
+                permittedDevicesEl.innerHTML = '<span style="margin-right: 10px; align-self: center;">Quick connect:</span>';
+                devices.forEach((device, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-success';
+                    btn.textContent = device.name || `Device ${index + 1}`;
+                    btn.addEventListener('click', async () => {
+                        log(`Reconnecting to ${device.name || device.id}...`, 'info');
+                        const success = await tap.connectToDevice(device);
+                        if (!success) {
+                            log('Reconnection failed', 'error');
+                        }
+                    });
+                    permittedDevicesEl.appendChild(btn);
+                });
+            }
+        }
+
+        // Logging helper
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.dataset.type = type;
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            entry.innerHTML = `<span class="timestamp">[${time}]</span>${message}`;
+            
+            // Check if this type is currently filtered
+            const enabled = getEnabledFilters();
+            entry.style.display = enabled.has(type) ? 'block' : 'none';
+            
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Air gesture name lookup
+        function getGestureName(gesture) {
+            const names = Object.entries(AirGestures).find(([, v]) => v === gesture);
+            return names ? names[0] : `Unknown(${gesture})`;
+        }
+
+        // Update UI state
+        function setConnected(connected) {
+            statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+            statusEl.textContent = `Status: ${connected ? 'Connected' : 'Disconnected'}`;
+
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            textModeBtn.disabled = !connected;
+            controllerModeBtn.disabled = !connected;
+            controllerTextModeBtn.disabled = !connected;
+            rawModeBtn.disabled = !connected;
+            autoTypeBtn.disabled = !connected;
+            mouseTypeBtn.disabled = !connected;
+            keyboardTypeBtn.disabled = !connected;
+            vibrateBtn.disabled = !connected;
+        }
+
+        // Register event callbacks
+        tap.registerConnectionEvents((sdk) => {
+            log(`Connected to: ${sdk.identifier}`, 'info');
+            setConnected(true);
+        });
+
+        tap.registerDisconnectionEvents((identifier) => {
+            log(`Disconnected: ${identifier}`, 'error');
+            setConnected(false);
+        });
+
+        tap.registerTapEvents((identifier, tapcode) => {
+            const fingers = tapcode.toString(2).padStart(5, '0').split('').reverse()
+                .map((b, i) => b === '1' ? ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'][i] : null)
+                .filter(Boolean).join(', ');
+            log(`Tap: ${tapcode} (${fingers || 'none'})`, 'tap');
+        });
+
+        tap.registerMouseEvents((identifier, vx, vy, proximity) => {
+            log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`, 'mouse');
+        });
+
+        tap.registerAirGestureEvents((identifier, gesture) => {
+            log(`Gesture: ${getGestureName(gesture)}`, 'gesture');
+        });
+
+        tap.registerAirGestureStateEvents((identifier, mouseMode) => {
+            log(`Mouse mode changed: ${mouseMode}`, 'state');
+        });
+
+        tap.registerRawDataEvents((identifier, packets) => {
+            for (const pkt of packets) {
+                const payloadStr = pkt.payload.map(v => v.toFixed(2)).join(', ');
+                log(`Raw [${pkt.type}] ts=${pkt.ts}: ${payloadStr}`, 'raw');
+            }
+        });
+
+        // Button handlers
+        connectBtn.addEventListener('click', async () => {
+            log('Connecting...', 'info');
+            try {
+                const success = await tap.connect();
+                if (!success) {
+                    log('Connection failed or cancelled', 'error');
+                }
+            } catch (err) {
+                log(`Connection error: ${err.message || err}`, 'error');
+                console.error('Full error:', err);
+            }
+        });
+
+        disconnectBtn.addEventListener('click', () => {
+            tap.disconnect();
+        });
+
+        textModeBtn.addEventListener('click', async () => {
+            log('Setting Text Mode', 'info');
+            await tap.setInputMode(new InputModeText());
+        });
+
+        controllerModeBtn.addEventListener('click', async () => {
+            log('Setting Controller Mode', 'info');
+            await tap.setInputMode(new InputModeController());
+        });
+
+        controllerTextModeBtn.addEventListener('click', async () => {
+            log('Setting Controller + Text Mode', 'info');
+            await tap.setInputMode(new InputModeControllerText());
+        });
+
+        rawModeBtn.addEventListener('click', async () => {
+            log('Setting Raw Mode (scaled, G16/DPS500/G4)', 'info');
+            await tap.setInputMode(new InputModeRaw({
+                scaled: true,
+                fingerAcclSens: FingerAcclSensitivity.G16,
+                imuGyroSens: ImuGyroSensitivity.DPS500,
+                imuAcclSens: ImuAcclSensitivity.G4,
+            }));
+        });
+
+        autoTypeBtn.addEventListener('click', async () => {
+            log('Setting Input Type: Auto', 'info');
+            await tap.setInputType(InputType.AUTO);
+        });
+
+        mouseTypeBtn.addEventListener('click', async () => {
+            log('Setting Input Type: Mouse', 'info');
+            await tap.setInputType(InputType.MOUSE);
+        });
+
+        keyboardTypeBtn.addEventListener('click', async () => {
+            log('Setting Input Type: Keyboard', 'info');
+            await tap.setInputType(InputType.KEYBOARD);
+        });
+
+        vibrateBtn.addEventListener('click', async () => {
+            log('Sending vibration sequence', 'info');
+            await tap.sendVibrationSequence([100, 200, 100, 200, 500]);
+        });
+
+        clearLogBtn.addEventListener('click', () => {
+            logEl.innerHTML = '';
+        });
+
+        // Initial setup
+        log('TapSDK Web ready. Click "Connect to Tap" to begin.', 'info');
+        checkPermittedDevices();
+    </script>
+</body>
+</html>
