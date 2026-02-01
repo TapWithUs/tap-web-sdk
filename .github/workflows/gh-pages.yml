@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build SDK
+      run: npm run build
+
+    - name: Prepare publish directory
+      run: |
+        mkdir -p publish/dist
+        cp examples/basic/index.html publish/index.html
+        cp dist/tap-sdk-web.bundle.js publish/dist/
+        cp dist/tap-sdk-web.bundle.js.map publish/dist/
+        # Update the import path in index.html
+        sed -i "s|'../../dist/tap-sdk-web.bundle.js'|'./dist/tap-sdk-web.bundle.js'|g" publish/index.html
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./publish
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
