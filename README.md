@@ -1,6 +1,7 @@
 # TapSDK Web
 
 A TypeScript/JavaScript SDK for communicating with [Tap Strap](https://www.tapwithus.com/) devices in the browser using Web Bluetooth.
+#### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
 
 ## Browser Support
 
