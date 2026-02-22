@@ -17,13 +17,32 @@ export function tapDataMsg(data: DataView): number {
 /**
  * Parse mouse data message
  * @param data Raw data from mouse_data_characteristic
- * @returns [vx, vy, proximity]
+ * @returns [vx, vy, proximity, roll, pitch, yaw]
+ * 
+ * Mouse data structure:
+ * - Byte 0: Message type (0 for mouse data)
+ * - Bytes 1-2: Velocity X (int16, little-endian, signed)
+ * - Bytes 3-4: Velocity Y (int16, little-endian, signed)
+ * - Bytes 5-8: Reserved
+ * - Byte 9: Proximity flag (1 = mouse active)
+ * - Bytes 10-11: Roll in degrees (int16, little-endian, signed)
+ * - Bytes 12-13: Pitch in degrees (int16, little-endian, signed)
+ * - Bytes 14-15: Yaw in degrees (int16, little-endian, signed)
  */
-export function mouseDataMsg(data: DataView): [number, number, boolean] {
+export function mouseDataMsg(data: DataView): [number, number, boolean, number, number, number] {
     const vx = data.getInt16(1, true); // little-endian, signed
     const vy = data.getInt16(3, true);
     const prox = data.getUint8(9) === 1;
-    return [vx, vy, prox];
+    
+    // Extract orientation data (if available)
+    let roll = 0, pitch = 0, yaw = 0;
+    if (data.byteLength >= 16) {
+        roll = data.getInt16(10, true);
+        pitch = data.getInt16(12, true);
+        yaw = data.getInt16(14, true);
+    }
+    
+    return [vx, vy, prox, roll, pitch, yaw];
 }
 
 /**

@@ -36,10 +36,13 @@ describe('parsers', () => {
             view.setInt16(3, -50, true); // vy little-endian
             view.setUint8(9, 1); // proximity = true
 
-            const [vx, vy, prox] = mouseDataMsg(view);
+            const [vx, vy, prox, roll, pitch, yaw] = mouseDataMsg(view);
             expect(vx).toBe(100);
             expect(vy).toBe(-50);
             expect(prox).toBe(true);
+            expect(roll).toBe(0);
+            expect(pitch).toBe(0);
+            expect(yaw).toBe(0);
         });
 
         it('should handle proximity = false', () => {
@@ -63,6 +66,70 @@ describe('parsers', () => {
             const [vx, vy] = mouseDataMsg(view);
             expect(vx).toBe(-200);
             expect(vy).toBe(-300);
+        });
+
+        it('should parse orientation data (roll, pitch, yaw) when available', () => {
+            const buffer = new ArrayBuffer(16);
+            const view = new DataView(buffer);
+            view.setInt16(1, 100, true); // vx
+            view.setInt16(3, -50, true); // vy
+            view.setUint8(9, 1); // proximity
+            view.setInt16(10, 45, true); // roll in degrees
+            view.setInt16(12, -30, true); // pitch in degrees
+            view.setInt16(14, 90, true); // yaw in degrees
+
+            const [vx, vy, prox, roll, pitch, yaw] = mouseDataMsg(view);
+            expect(vx).toBe(100);
+            expect(vy).toBe(-50);
+            expect(prox).toBe(true);
+            expect(roll).toBe(45);
+            expect(pitch).toBe(-30);
+            expect(yaw).toBe(90);
+        });
+
+        it('should handle negative orientation angles', () => {
+            const buffer = new ArrayBuffer(16);
+            const view = new DataView(buffer);
+            view.setInt16(1, 0, true);
+            view.setInt16(3, 0, true);
+            view.setUint8(9, 0);
+            view.setInt16(10, -180, true); // roll
+            view.setInt16(12, -90, true); // pitch
+            view.setInt16(14, -45, true); // yaw
+
+            const [, , , roll, pitch, yaw] = mouseDataMsg(view);
+            expect(roll).toBe(-180);
+            expect(pitch).toBe(-90);
+            expect(yaw).toBe(-45);
+        });
+
+        it('should return zero orientation when data is shorter than 16 bytes', () => {
+            const buffer = new ArrayBuffer(10);
+            const view = new DataView(buffer);
+            view.setInt16(1, 100, true);
+            view.setInt16(3, -50, true);
+            view.setUint8(9, 1);
+
+            const [, , , roll, pitch, yaw] = mouseDataMsg(view);
+            expect(roll).toBe(0);
+            expect(pitch).toBe(0);
+            expect(yaw).toBe(0);
+        });
+
+        it('should handle full 360 degree range', () => {
+            const buffer = new ArrayBuffer(16);
+            const view = new DataView(buffer);
+            view.setInt16(1, 0, true);
+            view.setInt16(3, 0, true);
+            view.setUint8(9, 0);
+            view.setInt16(10, 180, true);
+            view.setInt16(12, 90, true);
+            view.setInt16(14, 270, true);
+
+            const [, , , roll, pitch, yaw] = mouseDataMsg(view);
+            expect(roll).toBe(180);
+            expect(pitch).toBe(90);
+            expect(yaw).toBe(270);
         });
     });
 

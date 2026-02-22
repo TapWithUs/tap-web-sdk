@@ -10,6 +10,9 @@ export interface MouseEvent {
     vx: number;
     vy: number;
     proximity: boolean;
+    roll: number;
+    pitch: number;
+    yaw: number;
 }
 
 export interface AirGestureEvent {

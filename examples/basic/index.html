@@ -346,8 +346,8 @@
             log(`Tap: ${tapcode} (${fingers || 'none'})`, 'tap');
         });
 
-        tap.registerMouseEvents((identifier, vx, vy, proximity) => {
-            log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`, 'mouse');
+        tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
+            log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}, roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`, 'mouse');
         });
 
         tap.registerAirGestureEvents((identifier, gesture) => {

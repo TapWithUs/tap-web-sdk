@@ -17,7 +17,7 @@ const RAW_SENSORS_CHARACTERISTIC = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // NU
 
 // Callback types
 export type TapEventCallback = (identifier: string, tapcode: number) => void;
-export type MouseEventCallback = (identifier: string, vx: number, vy: number, proximity: boolean) => void;
+export type MouseEventCallback = (identifier: string, vx: number, vy: number, proximity: boolean, roll: number, pitch: number, yaw: number) => void;
 export type AirGestureEventCallback = (identifier: string, gesture: number) => void;
 export type AirGestureStateEventCallback = (identifier: string, mouseMode: MouseModes) => void;
 export type RawDataEventCallback = (identifier: string, packets: Array<{ type: string; ts: number; payload: number[] }>) => void;
@@ -366,8 +366,8 @@ export class TapSDKWeb {
 
     private onMoused(data: DataView): void {
         if (this.mouseEventCb) {
-            const [vx, vy, prox] = mouseDataMsg(data);
-            this.mouseEventCb(this.identifier, vx, vy, prox);
+            const [vx, vy, prox, roll, pitch, yaw] = mouseDataMsg(data);
+            this.mouseEventCb(this.identifier, vx, vy, prox, roll, pitch, yaw);
         }
     }
 

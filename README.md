@@ -64,8 +64,9 @@ tap.registerTapEvents((identifier, tapcode) => {
     console.log(`Tap detected: ${tapcode}`);
 });
 
-tap.registerMouseEvents((identifier, vx, vy, proximity) => {
+tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
     console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
+    console.log(`Orientation: roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`);
 });
 
 tap.registerAirGestureEvents((identifier, gesture) => {
@@ -117,7 +118,7 @@ The main class for interacting with Tap devices.
 | `registerConnectionEvents(cb)` | `(sdk: TapSDKWeb) => void` |
 | `registerDisconnectionEvents(cb)` | `(identifier: string) => void` |
 | `registerTapEvents(cb)` | `(identifier: string, tapcode: number) => void` |
-| `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean) => void` |
+| `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean, roll: number, pitch: number, yaw: number) => void` |
 | `registerAirGestureEvents(cb)` | `(identifier: string, gesture: number) => void` |
 | `registerAirGestureStateEvents(cb)` | `(identifier: string, mouseMode: MouseModes) => void` |
 | `registerRawDataEvents(cb)` | `(identifier: string, packets: RawDataPacket[]) => void` |
@@ -183,6 +184,22 @@ Tap codes are 5-bit bitmaps representing which fingers tapped:
 | Pinky  | 16 |
 
 Example: `tapcode = 3` means Thumb + Index tapped together.
+
+### Mouse Events & Orientation Data
+
+Mouse events include velocity, proximity, and device orientation (roll, pitch, yaw):
+
+```typescript
+tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
+    // vx, vy: Mouse velocity (signed integers)
+    // proximity: Boolean indicating if mouse is active
+    // roll, pitch, yaw: Orientation angles in degrees (signed integers)
+    console.log(`Velocity: (${vx}, ${vy}), Active: ${proximity}`);
+    console.log(`Orientation: roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`);
+});
+```
+
+**Note:** Orientation data (roll/pitch/yaw) may be zero if not available on older firmware versions or if the data packet is shorter than 16 bytes.
 
 ### Air Gestures
 
