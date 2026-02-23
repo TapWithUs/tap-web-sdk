@@ -35,6 +35,14 @@ export enum AirGestures {
     STATE_FIST = 105,
 }
 
+export enum SwipeDirections {
+    NONE = 0,
+    UP = 1,
+    DOWN = 2,
+    LEFT = 3,
+    RIGHT = 4,
+}
+
 export enum FingerAcclSensitivity {
     G2 = 1,
     G4 = 2,

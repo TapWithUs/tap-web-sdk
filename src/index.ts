@@ -6,6 +6,7 @@ export {
     InputType,
     MouseModes,
     AirGestures,
+    SwipeDirections,
     FingerAcclSensitivity,
     ImuGyroSensitivity,
     ImuAcclSensitivity,

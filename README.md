@@ -73,6 +73,10 @@ tap.registerAirGestureEvents((identifier, gesture) => {
     console.log(`Air gesture: ${gesture}`);
 });
 
+tap.registerSwipeEvents((identifier, direction) => {
+    console.log(`Swipe direction: ${direction}`);
+});
+
 // Connect (triggers browser device picker)
 await tap.connect();
 
@@ -120,6 +124,7 @@ The main class for interacting with Tap devices.
 | `registerTapEvents(cb)` | `(identifier: string, tapcode: number) => void` |
 | `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean, roll: number, pitch: number, yaw: number) => void` |
 | `registerAirGestureEvents(cb)` | `(identifier: string, gesture: number) => void` |
+| `registerSwipeEvents(cb)` | `(identifier: string, direction: number) => void` |
 | `registerAirGestureStateEvents(cb)` | `(identifier: string, mouseMode: MouseModes) => void` |
 | `registerRawDataEvents(cb)` | `(identifier: string, packets: RawDataPacket[]) => void` |
 
@@ -221,6 +226,36 @@ tap.registerAirGestureEvents((identifier, gesture) => {
     }
 });
 ```
+
+### Swipe Gestures
+
+Swipe gestures are directional swipes detected from the air gesture characteristic:
+
+```typescript
+import { SwipeDirections } from 'tap-sdk-web';
+
+tap.registerSwipeEvents((identifier, direction) => {
+    switch (direction) {
+        case SwipeDirections.UP:
+            console.log('Swiped up');
+            break;
+        case SwipeDirections.DOWN:
+            console.log('Swiped down');
+            break;
+        case SwipeDirections.LEFT:
+            console.log('Swiped left');
+            break;
+        case SwipeDirections.RIGHT:
+            console.log('Swiped right');
+            break;
+    }
+});
+```
+
+**Note:** 
+- Swipe events are automatically debounced (300ms) to prevent duplicate detections
+- Swipe events take priority over air gesture events when both are present in the data
+- Based on the iOS SDK implementation
 
 ### Haptic Feedback
 

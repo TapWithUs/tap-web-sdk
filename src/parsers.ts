@@ -48,10 +48,18 @@ export function mouseDataMsg(data: DataView): [number, number, boolean, number, 
 /**
  * Parse air gesture data message
  * @param data Raw data from air_gesture_data_characteristic
- * @returns gesture code
+ * @returns [gesture code, swipe direction]
+ * 
+ * Air gesture data structure:
+ * - Byte 0: Gesture code (0x14 for mouse mode change, or gesture enum value)
+ * - Byte 1: State data (for mouse mode changes)
+ * - Byte 2: Reserved
+ * - Byte 3: Swipe direction (0 = no swipe, 1-4 = directional swipe)
  */
-export function airGestureDataMsg(data: DataView): number {
-    return data.getUint8(0);
+export function airGestureDataMsg(data: DataView): [number, number] {
+    const gesture = data.getUint8(0);
+    const swipe = data.byteLength > 3 ? data.getUint8(3) : 0;
+    return [gesture, swipe];
 }
 
 /**

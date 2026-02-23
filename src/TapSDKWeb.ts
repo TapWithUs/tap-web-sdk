@@ -20,6 +20,7 @@ export type TapEventCallback = (identifier: string, tapcode: number) => void;
 export type MouseEventCallback = (identifier: string, vx: number, vy: number, proximity: boolean, roll: number, pitch: number, yaw: number) => void;
 export type AirGestureEventCallback = (identifier: string, gesture: number) => void;
 export type AirGestureStateEventCallback = (identifier: string, mouseMode: MouseModes) => void;
+export type SwipeEventCallback = (identifier: string, direction: number) => void;
 export type RawDataEventCallback = (identifier: string, packets: Array<{ type: string; ts: number; payload: number[] }>) => void;
 export type ConnectionEventCallback = (sdk: TapSDKWeb) => void;
 export type DisconnectionEventCallback = (identifier: string) => void;
@@ -41,6 +42,7 @@ export class TapSDKWeb {
     private mouseEventCb: MouseEventCallback | null = null;
     private airGestureEventCb: AirGestureEventCallback | null = null;
     private airGestureStateEventCb: AirGestureStateEventCallback | null = null;
+    private swipeEventCb: SwipeEventCallback | null = null;
     private rawDataEventCb: RawDataEventCallback | null = null;
     private connectionCb: ConnectionEventCallback | null = null;
     private disconnectionCb: DisconnectionEventCallback | null = null;
@@ -51,6 +53,10 @@ export class TapSDKWeb {
     private inputType: InputType = InputType.AUTO;
     private inputModeRefreshInterval: number | null = null;
     private readonly INPUT_MODE_REFRESH_TIMEOUT = 10000; // 10 seconds
+    
+    // Swipe debouncing
+    private lastSwipeTime: Map<string, number> = new Map();
+    private readonly SWIPE_DEBOUNCE_MS = 300; // Debounce swipes within 300ms
 
     /**
      * Get the device identifier (name or id)
@@ -92,6 +98,13 @@ export class TapSDKWeb {
      */
     registerAirGestureStateEvents(cb: AirGestureStateEventCallback): void {
         this.airGestureStateEventCb = cb;
+    }
+
+    /**
+     * Register callback for swipe gesture events
+     */
+    registerSwipeEvents(cb: SwipeEventCallback): void {
+        this.swipeEventCb = cb;
     }
 
     /**
@@ -372,16 +385,28 @@ export class TapSDKWeb {
     }
 
     private onAirGesture(data: DataView): void {
-        const firstByte = data.getUint8(0);
+        const [gesture, swipe] = airGestureDataMsg(data);
+
+        // Check for swipe first (takes priority)
+        if (swipe !== 0 && this.swipeEventCb) {
+            // Debounce swipes to prevent duplicates
+            const now = Date.now();
+            const lastSwipe = this.lastSwipeTime.get(this.identifier) || 0;
+            
+            if (now - lastSwipe >= this.SWIPE_DEBOUNCE_MS) {
+                this.lastSwipeTime.set(this.identifier, now);
+                this.swipeEventCb(this.identifier, swipe);
+            }
+            return; // Don't process gesture if swipe was detected
+        }
 
         // Mouse mode event (0x14)
-        if (firstByte === 0x14) {
+        if (gesture === 0x14) {
             this.mouseMode = data.getUint8(1) as MouseModes;
             if (this.airGestureStateEventCb) {
                 this.airGestureStateEventCb(this.identifier, this.mouseMode);
             }
         } else if (this.airGestureEventCb) {
-            const gesture = airGestureDataMsg(data);
             this.airGestureEventCb(this.identifier, gesture);
         }
     }

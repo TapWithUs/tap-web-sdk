@@ -135,19 +135,76 @@ describe('parsers', () => {
 
     describe('airGestureDataMsg', () => {
         it('should parse gesture from first byte', () => {
-            const buffer = new ArrayBuffer(1);
+            const buffer = new ArrayBuffer(4);
             const view = new DataView(buffer);
             view.setUint8(0, 2); // UP_ONE_FINGER
+            view.setUint8(3, 0); // no swipe
 
-            expect(airGestureDataMsg(view)).toBe(2);
+            const [gesture, swipe] = airGestureDataMsg(view);
+            expect(gesture).toBe(2);
+            expect(swipe).toBe(0);
         });
 
         it('should parse PINCH gesture', () => {
-            const buffer = new ArrayBuffer(1);
+            const buffer = new ArrayBuffer(4);
             const view = new DataView(buffer);
             view.setUint8(0, 10);
+            view.setUint8(3, 0);
 
-            expect(airGestureDataMsg(view)).toBe(10);
+            const [gesture, swipe] = airGestureDataMsg(view);
+            expect(gesture).toBe(10);
+            expect(swipe).toBe(0);
+        });
+
+        it('should parse swipe direction from byte 3', () => {
+            const buffer = new ArrayBuffer(4);
+            const view = new DataView(buffer);
+            view.setUint8(0, 0); // no gesture
+            view.setUint8(3, 1); // UP swipe
+
+            const [gesture, swipe] = airGestureDataMsg(view);
+            expect(gesture).toBe(0);
+            expect(swipe).toBe(1);
+        });
+
+        it('should parse both gesture and swipe when present', () => {
+            const buffer = new ArrayBuffer(4);
+            const view = new DataView(buffer);
+            view.setUint8(0, 2); // UP_ONE_FINGER
+            view.setUint8(3, 4); // RIGHT swipe
+
+            const [gesture, swipe] = airGestureDataMsg(view);
+            expect(gesture).toBe(2);
+            expect(swipe).toBe(4);
+        });
+
+        it('should handle all swipe directions', () => {
+            const directions = [
+                { value: 1, name: 'UP' },
+                { value: 2, name: 'DOWN' },
+                { value: 3, name: 'LEFT' },
+                { value: 4, name: 'RIGHT' },
+            ];
+
+            directions.forEach(({ value }) => {
+                const buffer = new ArrayBuffer(4);
+                const view = new DataView(buffer);
+                view.setUint8(0, 0);
+                view.setUint8(3, value);
+
+                const [, swipe] = airGestureDataMsg(view);
+                expect(swipe).toBe(value);
+            });
+        });
+
+        it('should return 0 for swipe when data is shorter than 4 bytes', () => {
+            const buffer = new ArrayBuffer(1);
+            const view = new DataView(buffer);
+            view.setUint8(0, 2);
+
+            const [gesture, swipe] = airGestureDataMsg(view);
+            expect(gesture).toBe(2);
+            expect(swipe).toBe(0);
         });
     });
 

@@ -97,6 +97,7 @@
         .log-entry.tap { color: #4ec9b0; }
         .log-entry.mouse { color: #9cdcfe; }
         .log-entry.gesture { color: #ce9178; }
+        .log-entry.swipe { color: #d7ba7d; }
         .log-entry.raw { color: #b5cea8; }
         .log-entry.info { color: #dcdcaa; }
         .log-entry.error { color: #f14c4c; }
@@ -201,6 +202,7 @@
             <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
             <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
             <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
+            <label><input type="checkbox" class="log-filter" value="swipe" checked> Swipes</label>
             <label><input type="checkbox" class="log-filter" value="raw" checked> Raw Data</label>
             <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
             <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
@@ -219,6 +221,7 @@
             InputModeRaw,
             InputType,
             AirGestures,
+            SwipeDirections,
             FingerAcclSensitivity,
             ImuGyroSensitivity,
             ImuAcclSensitivity,
@@ -311,6 +314,12 @@
             return names ? names[0] : `Unknown(${gesture})`;
         }
 
+        // Swipe direction name lookup
+        function getSwipeDirectionName(direction) {
+            const names = Object.entries(SwipeDirections).find(([, v]) => v === direction);
+            return names ? names[0] : `Unknown(${direction})`;
+        }
+
         // Update UI state
         function setConnected(connected) {
             statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
@@ -352,6 +361,10 @@
 
         tap.registerAirGestureEvents((identifier, gesture) => {
             log(`Gesture: ${getGestureName(gesture)}`, 'gesture');
+        });
+
+        tap.registerSwipeEvents((identifier, direction) => {
+            log(`Swipe: ${getSwipeDirectionName(direction)}`, 'swipe');
         });
 
         tap.registerAirGestureStateEvents((identifier, mouseMode) => {
