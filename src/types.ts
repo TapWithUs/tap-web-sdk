@@ -30,3 +30,12 @@ export interface RawDataEvent {
     identifier: string;
     packets: RawDataMessage[];
 }
+
+export type ImuMotionData = [number, number, boolean, number[]];
+
+export type TapIncMessage =
+    | { type: 'imu_raw'; data: RawDataMessage[] }
+    | { type: 'imu_motion'; data: ImuMotionData }
+    | { type: 'tap_gesture'; data: number[] }
+    | { type: 'air_gesture'; data: number[] }
+    | { type: 'standby_state'; data: boolean };

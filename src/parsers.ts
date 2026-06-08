@@ -1,9 +1,26 @@
 // Parsers ported from tapsdk/parsers.py
 
-import type { RawDataMessage } from './types';
+import type { RawDataMessage, TapIncMessage } from './types';
 
 // Constant for distinguishing raw message types (2^31)
 const MSG_TYPE_VALUE = 2147483648;
+
+export const IncCommandType = {
+    IMU_DATA: 0,
+    MODEL_DETECTION: 1,
+    STANDBY_STATE: 2,
+} as const;
+
+export const IncSubCommandType1 = {
+    IMU_MOTION_DATA: 0,
+    IMU_RAW_DATA: 1,
+    TAP_GESTURE: 2,
+    AIR_GESTURE: 3,
+} as const;
+
+const CMD_BYTE_INDEX = 0;
+const SUBCMD1_BYTE_INDEX = 1;
+const PAYLOAD_START_INDEX = 4;
 
 /**
  * Parse tap data message
@@ -29,19 +46,27 @@ export function tapDataMsg(data: DataView): number {
  * - Bytes 12-13: Pitch in degrees (int16, little-endian, signed)
  * - Bytes 14-15: Yaw in degrees (int16, little-endian, signed)
  */
-export function mouseDataMsg(data: DataView): [number, number, boolean, number, number, number] {
+export function mouseDataMsg(
+    data: DataView,
+    parseEulerAngles = true,
+): [number, number, boolean, number, number, number] {
     const vx = data.getInt16(1, true); // little-endian, signed
     const vy = data.getInt16(3, true);
     const prox = data.getUint8(9) === 1;
-    
-    // Extract orientation data (if available)
-    let roll = 0, pitch = 0, yaw = 0;
+
+    if (!parseEulerAngles) {
+        return [vx, vy, prox, 0, 0, 0];
+    }
+
+    let roll = 0;
+    let pitch = 0;
+    let yaw = 0;
     if (data.byteLength >= 16) {
         roll = data.getInt16(10, true);
         pitch = data.getInt16(12, true);
         yaw = data.getInt16(14, true);
     }
-    
+
     return [vx, vy, prox, roll, pitch, yaw];
 }
 
@@ -139,4 +164,62 @@ export function rawDataMsg(
     }
 
     return messages;
+}
+
+/**
+ * Parse incremental (TapSDK2) notification messages.
+ * @param data Raw notification payload from tap_data_read_characteristic
+ * @param scaleFactors Optional [fingerAccScale, imuGyroScale, imuAccScale] for scaling
+ */
+export function tapIncMsg(
+    data: DataView,
+    scaleFactors?: [number | null, number | null, number | null],
+): TapIncMessage | null {
+    const cmdType = data.getUint8(CMD_BYTE_INDEX);
+
+    if (cmdType === IncCommandType.IMU_DATA) {
+        const subCmdType = data.getUint8(SUBCMD1_BYTE_INDEX);
+        const payload = new DataView(data.buffer, data.byteOffset + PAYLOAD_START_INDEX, data.byteLength - PAYLOAD_START_INDEX);
+
+        if (subCmdType === IncSubCommandType1.IMU_MOTION_DATA) {
+            const vx = payload.getInt16(1, true);
+            const vy = payload.getInt16(3, true);
+            const prox = payload.getUint8(9) === 1;
+            const eulerAngles = [0, 1, 2].map((i) => payload.getInt16(10 + i * 2, true));
+            return {
+                type: 'imu_motion',
+                data: [vx, vy, prox, eulerAngles] as [number, number, boolean, number[]],
+            };
+        }
+        if (subCmdType === IncSubCommandType1.IMU_RAW_DATA) {
+            return {
+                type: 'imu_raw',
+                data: rawDataMsg(payload, scaleFactors),
+            };
+        }
+    } else if (cmdType === IncCommandType.MODEL_DETECTION) {
+        const subCmdType = data.getUint8(SUBCMD1_BYTE_INDEX);
+        const payload = new DataView(data.buffer, data.byteOffset + PAYLOAD_START_INDEX, data.byteLength - PAYLOAD_START_INDEX);
+
+        if (subCmdType === IncSubCommandType1.TAP_GESTURE) {
+            return {
+                type: 'tap_gesture',
+                data: [tapDataMsg(payload)],
+            };
+        }
+        if (subCmdType === IncSubCommandType1.AIR_GESTURE) {
+            const [gesture] = airGestureDataMsg(payload);
+            return {
+                type: 'air_gesture',
+                data: [gesture],
+            };
+        }
+    } else if (cmdType === IncCommandType.STANDBY_STATE) {
+        return {
+            type: 'standby_state',
+            data: data.getUint8(PAYLOAD_START_INDEX) === 1,
+        };
+    }
+
+    return null;
 }
