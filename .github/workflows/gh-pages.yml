@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, v2 ]
 
 permissions:
   contents: read
@@ -37,8 +37,13 @@ jobs:
         cp examples/basic/index.html publish/index.html
         cp dist/tap-sdk-web.bundle.js publish/dist/
         cp dist/tap-sdk-web.bundle.js.map publish/dist/
-        # Update the import path in index.html
         sed -i "s|'../../dist/tap-sdk-web.bundle.js'|'./dist/tap-sdk-web.bundle.js'|g" publish/index.html
+
+        if [ -f examples/v2/index.html ]; then
+          mkdir -p publish/v2
+          cp examples/v2/index.html publish/v2/index.html
+          sed -i "s|'../../dist/tap-sdk-web.bundle.js'|'../dist/tap-sdk-web.bundle.js'|g" publish/v2/index.html
+        fi
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
