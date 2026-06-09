@@ -100,6 +100,16 @@ export function encodeKeepaliveMessage(): Uint8Array {
     return encodeMsg(OutCommandType.KEEPALIVE_COMMAND, 0, 0, 0, new Uint8Array(0));
 }
 
+export function encodeStandbyStateGet(): Uint8Array {
+    return encodeMsg(
+        OutCommandType.STANDBY_STATE_COMMAND,
+        OutSubCommandType1.STANDBY_STATE_GET,
+        0,
+        0,
+        new Uint8Array(0),
+    );
+}
+
 export function encodeStandbyStateSet(standby: boolean): Uint8Array {
     const payload = new Uint8Array(1);
     payload[0] = standby ? 1 : 0;

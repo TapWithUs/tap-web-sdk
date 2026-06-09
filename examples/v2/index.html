@@ -224,6 +224,14 @@
                 <button id="rawImuOffBtn" class="btn-danger btn-toggle-off" disabled>Disable</button>
             </div>
         </div>
+        <div class="feature-row">
+            <span class="feature-name">Standby Gesture Detection</span>
+            <span id="standbyGestureState" class="feature-state unknown">—</span>
+            <div class="feature-actions">
+                <button id="standbyGestureOnBtn" class="btn-success btn-toggle-on" disabled>Enable</button>
+                <button id="standbyGestureOffBtn" class="btn-danger btn-toggle-off" disabled>Disable</button>
+            </div>
+        </div>
         <p class="hint">State reflects commands sent from this page — the device does not report feature status back.</p>
     </div>
 
@@ -247,6 +255,7 @@
             <button id="vibrateBtn" class="btn-success" disabled>Send Vibration</button>
             <button id="standbyOnBtn" class="btn-secondary" disabled>Enter Standby</button>
             <button id="standbyOffBtn" class="btn-secondary" disabled>Exit Standby</button>
+            <button id="standbyQueryBtn" class="btn-secondary" disabled>Query Standby State</button>
         </div>
     </div>
 
@@ -339,9 +348,12 @@
         const imuMotionOffBtn = document.getElementById('imuMotionOffBtn');
         const rawImuOnBtn = document.getElementById('rawImuOnBtn');
         const rawImuOffBtn = document.getElementById('rawImuOffBtn');
+        const standbyGestureOnBtn = document.getElementById('standbyGestureOnBtn');
+        const standbyGestureOffBtn = document.getElementById('standbyGestureOffBtn');
         const modelDetectionState = document.getElementById('modelDetectionState');
         const imuMotionState = document.getElementById('imuMotionState');
         const rawImuState = document.getElementById('rawImuState');
+        const standbyGestureState = document.getElementById('standbyGestureState');
 
         const featureUi = {
             [DeviceFeatures.MODEL_DETECTION]: {
@@ -362,12 +374,19 @@
                 onBtn: rawImuOnBtn,
                 offBtn: rawImuOffBtn,
             },
+            [DeviceFeatures.STANDBY_GESTURE_DETECTION]: {
+                label: 'Standby gesture detection',
+                stateEl: standbyGestureState,
+                onBtn: standbyGestureOnBtn,
+                offBtn: standbyGestureOffBtn,
+            },
         };
 
         const featureState = {
             [DeviceFeatures.MODEL_DETECTION]: null,
             [DeviceFeatures.IMU_MOTION_DATA]: null,
             [DeviceFeatures.RAW_IMU_DATA]: null,
+            [DeviceFeatures.STANDBY_GESTURE_DETECTION]: null,
         };
         const modelTappingBtn = document.getElementById('modelTappingBtn');
         const modelAirGestureBtn = document.getElementById('modelAirGestureBtn');
@@ -378,6 +397,7 @@
         const vibrateBtn = document.getElementById('vibrateBtn');
         const standbyOnBtn = document.getElementById('standbyOnBtn');
         const standbyOffBtn = document.getElementById('standbyOffBtn');
+        const standbyQueryBtn = document.getElementById('standbyQueryBtn');
         const clearLogBtn = document.getElementById('clearLogBtn');
 
         const actionButtons = [
@@ -385,8 +405,9 @@
             modelDetectionOnBtn, modelDetectionOffBtn,
             imuMotionOnBtn, imuMotionOffBtn,
             rawImuOnBtn, rawImuOffBtn,
+            standbyGestureOnBtn, standbyGestureOffBtn,
             modelTappingBtn, modelAirGestureBtn, modeTriggerBtn, modeStreamOnTriggerBtn,
-            modeStreamBtn, imuSensBtn, vibrateBtn, standbyOnBtn, standbyOffBtn,
+            modeStreamBtn, imuSensBtn, vibrateBtn, standbyOnBtn, standbyOffBtn, standbyQueryBtn,
         ];
 
         function getEnabledFilters() {
@@ -575,6 +596,8 @@
         imuMotionOffBtn.addEventListener('click', () => setDeviceFeature(DeviceFeatures.IMU_MOTION_DATA, false));
         rawImuOnBtn.addEventListener('click', () => setDeviceFeature(DeviceFeatures.RAW_IMU_DATA, true));
         rawImuOffBtn.addEventListener('click', () => setDeviceFeature(DeviceFeatures.RAW_IMU_DATA, false));
+        standbyGestureOnBtn.addEventListener('click', () => setDeviceFeature(DeviceFeatures.STANDBY_GESTURE_DETECTION, true));
+        standbyGestureOffBtn.addEventListener('click', () => setDeviceFeature(DeviceFeatures.STANDBY_GESTURE_DETECTION, false));
 
         modelTappingBtn.addEventListener('click', async () => {
             await tap.setVisionSensorModel(ModelTypes.TAPPING);
@@ -623,6 +646,11 @@
         standbyOffBtn.addEventListener('click', async () => {
             await tap.setStandbyState(false);
             log('Active mode requested', 'info');
+        });
+
+        standbyQueryBtn.addEventListener('click', async () => {
+            await tap.getStandbyState();
+            log('Standby state query sent — response arrives via standby event', 'info');
         });
 
         clearLogBtn.addEventListener('click', () => { logEl.innerHTML = ''; });

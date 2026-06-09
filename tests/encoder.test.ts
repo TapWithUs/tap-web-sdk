@@ -6,6 +6,7 @@ import {
     encodeSetImuSensitivity,
     encodeSetHapticPattern,
     encodeKeepaliveMessage,
+    encodeStandbyStateGet,
     encodeStandbyStateSet,
 } from '../src/encoder';
 import { DeviceFeatures, VisionSensorOpModes, ModelTypes } from '../src/enumerations';
@@ -40,6 +41,11 @@ describe('encoder', () => {
     it('should encode keepalive command', () => {
         const cmd = encodeKeepaliveMessage();
         expect(Array.from(cmd)).toEqual([2, 0, 0, 0]);
+    });
+
+    it('should encode standby state get command', () => {
+        const cmd = encodeStandbyStateGet();
+        expect(Array.from(cmd)).toEqual([3, 3, 0, 0]);
     });
 
     it('should encode standby state set command', () => {

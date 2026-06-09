@@ -40,6 +40,7 @@ export {
     encodeSetImuSensitivity,
     encodeSetHapticPattern,
     encodeKeepaliveMessage,
+    encodeStandbyStateGet,
     encodeStandbyStateSet,
 } from './encoder';
 export type {

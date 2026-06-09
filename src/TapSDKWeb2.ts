@@ -16,6 +16,7 @@ import {
     encodeSetImuSensitivity,
     encodeSetVisionSensorModel,
     encodeSetVisionSensorOpMode,
+    encodeStandbyStateGet,
     encodeStandbyStateSet,
 } from './encoder';
 import { RawSensorsSensitivity } from './inputmodes';
@@ -216,6 +217,11 @@ export class TapSDKWeb2 {
 
     async setStandbyState(standby: boolean): Promise<void> {
         const writeValue = encodeStandbyStateSet(standby);
+        await this.writeTapGattChar(writeValue);
+    }
+
+    async getStandbyState(): Promise<void> {
+        const writeValue = encodeStandbyStateGet();
         await this.writeTapGattChar(writeValue);
     }
 
