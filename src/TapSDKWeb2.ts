@@ -10,6 +10,10 @@ import {
     VisionSensorOpModes,
 } from './enumerations';
 import {
+    encodeGetFeature,
+    encodeGetImuSensitivity,
+    encodeGetVisionSensorModel,
+    encodeGetVisionSensorOpMode,
     encodeKeepaliveMessage,
     encodeSetFeature,
     encodeSetHapticPattern,
@@ -22,11 +26,16 @@ import {
 import { RawSensorsSensitivity } from './inputmodes';
 import { tapIncMsg } from './parsers';
 import type { ImuMotionData, RawDataMessage } from './types';
+import {
+    BATTERY_SERVICE,
+    DEVICE_INFORMATION_SERVICE,
+    SERIAL_NUMBER_CHARACTERISTIC,
+    readDeviceInfo,
+    type DeviceInfo,
+} from './deviceInfo';
+import { TAP_SERVICE, V2_READ_CHAR, V2_WRITE_CHAR } from './detect';
 
-const TAP_SERVICE = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370';
-const TAP_DATA_READ_CHARACTERISTIC = 'c3ff000e-1d8b-40fd-a56f-c7bd5d0f3370';
-const TAP_DATA_WRITE_CHARACTERISTIC = 'c3ff000f-1d8b-40fd-a56f-c7bd5d0f3370';
-const SERIAL_NUMBER_CHARACTERISTIC = '00002a25-0000-1000-8000-00805f9b34fb';
+const DEFAULT_GET_TIMEOUT_MS = 2000;
 
 export type TapEventCallback = (identifier: string, tapcode: number[]) => void;
 export type AirGestureEventCallback = (identifier: string, gestureData: number[]) => void;
@@ -35,6 +44,14 @@ export type ImuMotionDataEventCallback = (identifier: string, motionData: ImuMot
 export type StandbyStateEventCallback = (identifier: string, isStandby: boolean) => void;
 export type ConnectionEventCallback = (serialNumber: string) => void;
 export type DisconnectionEventCallback = (identifier: string) => void;
+
+type PendingKey = string;
+
+interface PendingRequest {
+    resolve: (value: unknown) => void;
+    reject: (reason: Error) => void;
+    timer: ReturnType<typeof setTimeout>;
+}
 
 export class TapSDKWeb2 {
     private device: BluetoothDevice | null = null;
@@ -55,9 +72,14 @@ export class TapSDKWeb2 {
     private writeChain: Promise<void> = Promise.resolve();
     private keepAliveInterval: number | null = null;
     private readonly keepAliveTimeout: number;
+    private readonly getTimeoutMs: number;
+    private pendingRequests = new Map<PendingKey, PendingRequest>();
 
-    constructor(options?: { keepaliveTimeout?: number }) {
+    constructor(options?: { keepaliveTimeout?: number; getTimeout?: number }) {
         this.keepAliveTimeout = options?.keepaliveTimeout ?? 10000;
+        this.getTimeoutMs = options?.getTimeout != null
+            ? Math.round(options.getTimeout * (options.getTimeout < 100 ? 1000 : 1))
+            : DEFAULT_GET_TIMEOUT_MS;
     }
 
     get identifier(): string {
@@ -70,6 +92,10 @@ export class TapSDKWeb2 {
 
     get isConnected(): boolean {
         return this.server?.connected ?? false;
+    }
+
+    get protocol(): 'v2' {
+        return 'v2';
     }
 
     static isSupported(): boolean {
@@ -143,7 +169,7 @@ export class TapSDKWeb2 {
 
         this.device = await navigator.bluetooth.requestDevice({
             filters: [{ services: [TAP_SERVICE] }],
-            optionalServices: [TAP_SERVICE],
+            optionalServices: [DEVICE_INFORMATION_SERVICE, BATTERY_SERVICE],
         });
 
         this.device.addEventListener('gattserverdisconnected', () => {
@@ -155,9 +181,17 @@ export class TapSDKWeb2 {
 
     disconnect(): void {
         this.stopKeepAlive();
+        this.rejectAllPending(new Error('Disconnected'));
         if (this.server?.connected) {
             this.server.disconnect();
         }
+    }
+
+    async getDeviceInfo(): Promise<DeviceInfo> {
+        if (!this.server?.connected) {
+            throw new Error('Not connected');
+        }
+        return readDeviceInfo(this.server, { deviceName: this.device?.name ?? undefined });
     }
 
     async setFeature(feature: DeviceFeatures, enable: boolean): Promise<void> {
@@ -220,9 +254,39 @@ export class TapSDKWeb2 {
         await this.writeTapGattChar(writeValue);
     }
 
-    async getStandbyState(): Promise<void> {
-        const writeValue = encodeStandbyStateGet();
-        await this.writeTapGattChar(writeValue);
+    async getStandbyState(): Promise<boolean> {
+        return this.requestAndWait('standby_state', encodeStandbyStateGet()) as Promise<boolean>;
+    }
+
+    async getFeature(feature: DeviceFeatures): Promise<boolean> {
+        return this.requestAndWait(
+            `config_feature:${feature}`,
+            encodeGetFeature(feature),
+        ) as Promise<boolean>;
+    }
+
+    async getVisionSensorOpMode(): Promise<VisionSensorOpModes> {
+        const modeValue = await this.requestAndWait(
+            'config_vision_op_mode',
+            encodeGetVisionSensorOpMode(),
+        ) as number;
+        return modeValue as VisionSensorOpModes;
+    }
+
+    async getVisionSensorModel(): Promise<ModelTypes> {
+        const modelValue = await this.requestAndWait(
+            'config_vision_model',
+            encodeGetVisionSensorModel(),
+        ) as number;
+        return modelValue as ModelTypes;
+    }
+
+    async getImuSensitivity(): Promise<[ImuGyroSensitivity, ImuAcclSensitivity]> {
+        const [gyroValue, xlValue] = await this.requestAndWait(
+            'config_imu_sensitivity',
+            encodeGetImuSensitivity(),
+        ) as [number, number];
+        return [gyroValue as ImuGyroSensitivity, xlValue as ImuAcclSensitivity];
     }
 
     private async connectGatt(): Promise<boolean> {
@@ -233,8 +297,8 @@ export class TapSDKWeb2 {
         this.server = await this.device.gatt.connect();
         const tapService = await this.server.getPrimaryService(TAP_SERVICE);
 
-        this.tapDataReadChar = await tapService.getCharacteristic(TAP_DATA_READ_CHARACTERISTIC);
-        this.tapDataWriteChar = await tapService.getCharacteristic(TAP_DATA_WRITE_CHARACTERISTIC);
+        this.tapDataReadChar = await tapService.getCharacteristic(V2_READ_CHAR);
+        this.tapDataWriteChar = await tapService.getCharacteristic(V2_WRITE_CHAR);
 
         await this.tapDataReadChar.startNotifications();
         this.tapDataReadChar.addEventListener('characteristicvaluechanged', (event: Event) => {
@@ -245,9 +309,10 @@ export class TapSDKWeb2 {
         });
 
         try {
-            const serialChar = await tapService.getCharacteristic(SERIAL_NUMBER_CHARACTERISTIC);
+            const dis = await this.server.getPrimaryService(DEVICE_INFORMATION_SERVICE);
+            const serialChar = await dis.getCharacteristic(SERIAL_NUMBER_CHARACTERISTIC);
             const serialValue = await serialChar.readValue();
-            this.deviceSerialNumber = new TextDecoder().decode(serialValue.buffer);
+            this.deviceSerialNumber = new TextDecoder().decode(serialValue.buffer).replace(/\0/g, '').trim();
         } catch {
             this.deviceSerialNumber = this.device.name ?? this.device.id;
         }
@@ -259,6 +324,43 @@ export class TapSDKWeb2 {
         }
 
         return true;
+    }
+
+    private resolvePendingRequest(key: PendingKey, value: unknown): void {
+        const pending = this.pendingRequests.get(key);
+        if (!pending) {
+            return;
+        }
+        clearTimeout(pending.timer);
+        this.pendingRequests.delete(key);
+        pending.resolve(value);
+    }
+
+    private rejectAllPending(error: Error): void {
+        for (const [key, pending] of this.pendingRequests) {
+            clearTimeout(pending.timer);
+            pending.reject(error);
+            this.pendingRequests.delete(key);
+        }
+    }
+
+    private requestAndWait(key: PendingKey, writeValue: Uint8Array): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pendingRequests.delete(key);
+                reject(new Error(`get request timed out: ${key}`));
+            }, this.getTimeoutMs);
+
+            this.pendingRequests.set(key, { resolve, reject, timer });
+            void this.writeTapGattChar(writeValue).catch((error: unknown) => {
+                const pending = this.pendingRequests.get(key);
+                if (pending) {
+                    clearTimeout(pending.timer);
+                    this.pendingRequests.delete(key);
+                    pending.reject(error instanceof Error ? error : new Error(String(error)));
+                }
+            });
+        });
     }
 
     private onIncMsg(identifier: string, data: DataView): void {
@@ -293,15 +395,34 @@ export class TapSDKWeb2 {
                 }
                 break;
             case 'standby_state':
+                this.resolvePendingRequest('standby_state', message.data);
                 if (this.standbyStateEventCb) {
                     this.standbyStateEventCb(identifier, message.data);
                 }
+                break;
+            case 'config_feature':
+                this.resolvePendingRequest(
+                    `config_feature:${message.data.featureNumber}`,
+                    message.data.featureValue,
+                );
+                break;
+            case 'config_vision_op_mode':
+                this.resolvePendingRequest('config_vision_op_mode', message.data);
+                break;
+            case 'config_vision_model':
+                this.resolvePendingRequest('config_vision_model', message.data);
+                break;
+            case 'config_imu_sensitivity':
+                this.resolvePendingRequest('config_imu_sensitivity', message.data);
+                break;
+            default:
                 break;
         }
     }
 
     private onDisconnected(): void {
         this.stopKeepAlive();
+        this.rejectAllPending(new Error('Disconnected'));
         if (this.disconnectionCb) {
             this.disconnectionCb(this.identifier);
         }

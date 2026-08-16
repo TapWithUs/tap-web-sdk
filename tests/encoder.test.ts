@@ -1,11 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
     encodeSetFeature,
+    encodeGetFeature,
     encodeSetVisionSensorOpMode,
     encodeSetVisionSensorModel,
     encodeSetImuSensitivity,
     encodeSetHapticPattern,
     encodeKeepaliveMessage,
+    encodeGetVisionSensorOpMode,
+    encodeGetVisionSensorModel,
+    encodeGetImuSensitivity,
     encodeStandbyStateGet,
     encodeStandbyStateSet,
 } from '../src/encoder';
@@ -15,6 +19,11 @@ describe('encoder', () => {
     it('should encode set feature command', () => {
         const cmd = encodeSetFeature(DeviceFeatures.MODEL_DETECTION, 1);
         expect(Array.from(cmd)).toEqual([0, 0, 0, 0, DeviceFeatures.MODEL_DETECTION, 1]);
+    });
+
+    it('should encode get feature command', () => {
+        const cmd = encodeGetFeature(DeviceFeatures.IMU_MOTION_DATA);
+        expect(Array.from(cmd)).toEqual([0, 1, 0, 0, DeviceFeatures.IMU_MOTION_DATA]);
     });
 
     it('should encode vision sensor op mode command', () => {
@@ -41,6 +50,18 @@ describe('encoder', () => {
     it('should encode keepalive command', () => {
         const cmd = encodeKeepaliveMessage();
         expect(Array.from(cmd)).toEqual([2, 0, 0, 0]);
+    });
+
+    it('should encode get vision sensor op mode', () => {
+        expect(Array.from(encodeGetVisionSensorOpMode())).toEqual([1, 0, 10, 0]);
+    });
+
+    it('should encode get vision sensor model', () => {
+        expect(Array.from(encodeGetVisionSensorModel())).toEqual([1, 0, 11, 0]);
+    });
+
+    it('should encode get imu sensitivity', () => {
+        expect(Array.from(encodeGetImuSensitivity())).toEqual([1, 1, 12, 0]);
     });
 
     it('should encode standby state get command', () => {

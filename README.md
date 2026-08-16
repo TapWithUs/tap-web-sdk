@@ -47,44 +47,27 @@ npm install /path/to/tap-web-sdk
 
 ```typescript
 import {
-    TapSDKWeb,
+    connect,
+    isTapSDKWeb2,
     InputModeController,
-    InputType,
 } from 'tap-sdk-web';
 
-const tap = new TapSDKWeb();
+// Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
+const sdk = await connect();
 
-// Register event callbacks
-tap.registerConnectionEvents((sdk) => {
-    console.log(`Connected to: ${sdk.identifier}`);
-});
+sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
-tap.registerTapEvents((identifier, tapcode) => {
-    // tapcode is a 5-bit bitmap: Thumb=1, Index=2, Middle=4, Ring=8, Pinky=16
-    console.log(`Tap detected: ${tapcode}`);
-});
+if (isTapSDKWeb2(sdk)) {
+    sdk.registerTapEvents((id, data) => console.log('Tap', data[0]));
+} else {
+    sdk.registerTapEvents((id, tapcode) => console.log('Tap', tapcode));
+    sdk.registerMouseEvents((id, vx, vy, proximity) => {
+        console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
+    });
+    await sdk.setInputMode(new InputModeController());
+}
 
-tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
-    console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
-    console.log(`Orientation: roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`);
-});
-
-tap.registerAirGestureEvents((identifier, gesture) => {
-    console.log(`Air gesture: ${gesture}`);
-});
-
-tap.registerSwipeEvents((identifier, direction) => {
-    console.log(`Swipe direction: ${direction}`);
-});
-
-// Connect (triggers browser device picker)
-await tap.connect();
-
-// Set input mode
-await tap.setInputMode(new InputModeController());
-
-// Send haptic feedback
-await tap.sendVibrationSequence([100, 200, 100]);
+await sdk.sendVibrationSequence([100, 200, 100]);
 ```
 
 ## API Reference
@@ -122,9 +105,8 @@ The main class for interacting with Tap devices.
 | `registerConnectionEvents(cb)` | `(sdk: TapSDKWeb) => void` |
 | `registerDisconnectionEvents(cb)` | `(identifier: string) => void` |
 | `registerTapEvents(cb)` | `(identifier: string, tapcode: number) => void` |
-| `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean, roll: number, pitch: number, yaw: number) => void` |
+| `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean) => void` |
 | `registerAirGestureEvents(cb)` | `(identifier: string, gesture: number) => void` |
-| `registerSwipeEvents(cb)` | `(identifier: string, direction: number) => void` |
 | `registerAirGestureStateEvents(cb)` | `(identifier: string, mouseMode: MouseModes) => void` |
 | `registerRawDataEvents(cb)` | `(identifier: string, packets: RawDataPacket[]) => void` |
 
@@ -132,6 +114,7 @@ The main class for interacting with Tap devices.
 
 | Method | Description |
 |--------|-------------|
+| `getDeviceInfo()` | Read DIS/BAS + Tap device fields (`Promise<DeviceInfo>`) |
 | `setInputMode(mode)` | Set input mode (Text, Controller, ControllerText, Raw) |
 | `setInputType(type)` | Set input type for TapXR (Auto, Mouse, Keyboard) |
 | `sendVibrationSequence(durations)` | Send haptic feedback (array of durations in ms) |
@@ -227,36 +210,6 @@ tap.registerAirGestureEvents((identifier, gesture) => {
 });
 ```
 
-### Swipe Gestures
-
-Swipe gestures are directional swipes detected from the air gesture characteristic:
-
-```typescript
-import { SwipeDirections } from 'tap-sdk-web';
-
-tap.registerSwipeEvents((identifier, direction) => {
-    switch (direction) {
-        case SwipeDirections.UP:
-            console.log('Swiped up');
-            break;
-        case SwipeDirections.DOWN:
-            console.log('Swiped down');
-            break;
-        case SwipeDirections.LEFT:
-            console.log('Swiped left');
-            break;
-        case SwipeDirections.RIGHT:
-            console.log('Swiped right');
-            break;
-    }
-});
-```
-
-**Note:** 
-- Swipe events are automatically debounced (300ms) to prevent duplicate detections
-- Swipe events take priority over air gesture events when both are present in the data
-- Based on the iOS SDK implementation
-
 ### Haptic Feedback
 
 ```typescript
@@ -267,7 +220,7 @@ await tap.sendVibrationSequence([100, 200, 100, 200, 500]);
 
 ## Testing the Example Locally
 
-The SDK includes a complete working example in the [examples/basic](./examples/basic/) directory.
+The SDK includes a unified demo in [examples/index.html](./examples/index.html).
 
 ### Prerequisites
 
@@ -300,8 +253,8 @@ npx http-server -p 8000
 
 3. **Open the example in your browser**:
 
-- If using `serve`: Open [http://localhost:3000/examples/basic/](http://localhost:3000/examples/basic/)
-- If using Python or http-server: Open [http://localhost:8000/examples/basic/](http://localhost:8000/examples/basic/)
+- If using `serve`: Open [http://localhost:3000/examples/](http://localhost:3000/examples/)
+- If using Python or http-server: Open [http://localhost:8000/examples/](http://localhost:8000/examples/)
 
 4. **Test the SDK**:
 

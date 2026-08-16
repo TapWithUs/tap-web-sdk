@@ -11,7 +11,7 @@ const PAYLOAD_FEATURE_NUMBER_INDEX = 0;
 const PAYLOAD_FEATURE_VALUE_INDEX = 1;
 
 const OutCommandType = {
-    SET_FEATURE: 0,
+    FEATURE_COMMAND: 0,
     PERIPHERAL_COMMAND: 1,
     KEEPALIVE_COMMAND: 2,
     STANDBY_STATE_COMMAND: 3,
@@ -23,6 +23,8 @@ const OutSubCommandType1 = {
     PHERIPHERAL_TYPE_HAPTIC: 2,
     STANDBY_STATE_GET: 3,
     STANDBY_STATE_SET: 4,
+    SET_FEATURE: 0,
+    GET_FEATURE: 1,
 } as const;
 
 const OutSubCommandType2 = {
@@ -30,6 +32,9 @@ const OutSubCommandType2 = {
     SET_VISUAL_SENSOR_MODEL: 1,
     SET_IMU_SENSITIVITY: 2,
     SET_HAPTIC_PATTERN: 3,
+    GET_VISUAL_SENSOR_OP_MODE: 10,
+    GET_VISUAL_SENSOR_MODEL: 11,
+    GET_IMU_SENSITIVITY: 12,
 } as const;
 
 function encodeMsg(cmd: number, subcmd1: number, subcmd2: number, subcmd3: number, payload: Uint8Array): Uint8Array {
@@ -46,7 +51,25 @@ export function encodeSetFeature(featureNumber: number, featureValue: number): U
     const payload = new Uint8Array(2);
     payload[PAYLOAD_FEATURE_NUMBER_INDEX] = featureNumber;
     payload[PAYLOAD_FEATURE_VALUE_INDEX] = featureValue;
-    return encodeMsg(OutCommandType.SET_FEATURE, 0, 0, 0, payload);
+    return encodeMsg(
+        OutCommandType.FEATURE_COMMAND,
+        OutSubCommandType1.SET_FEATURE,
+        0,
+        0,
+        payload,
+    );
+}
+
+export function encodeGetFeature(featureNumber: number): Uint8Array {
+    const payload = new Uint8Array(1);
+    payload[0] = featureNumber;
+    return encodeMsg(
+        OutCommandType.FEATURE_COMMAND,
+        OutSubCommandType1.GET_FEATURE,
+        0,
+        0,
+        payload,
+    );
 }
 
 export function encodeSetVisionSensorOpMode(mode: number): Uint8Array {
@@ -98,6 +121,36 @@ export function encodeSetHapticPattern(sequence: Uint8Array): Uint8Array {
 
 export function encodeKeepaliveMessage(): Uint8Array {
     return encodeMsg(OutCommandType.KEEPALIVE_COMMAND, 0, 0, 0, new Uint8Array(0));
+}
+
+export function encodeGetVisionSensorOpMode(): Uint8Array {
+    return encodeMsg(
+        OutCommandType.PERIPHERAL_COMMAND,
+        OutSubCommandType1.PERIPHERAL_TYPE_VISION_SENSOR,
+        OutSubCommandType2.GET_VISUAL_SENSOR_OP_MODE,
+        0,
+        new Uint8Array(0),
+    );
+}
+
+export function encodeGetVisionSensorModel(): Uint8Array {
+    return encodeMsg(
+        OutCommandType.PERIPHERAL_COMMAND,
+        OutSubCommandType1.PERIPHERAL_TYPE_VISION_SENSOR,
+        OutSubCommandType2.GET_VISUAL_SENSOR_MODEL,
+        0,
+        new Uint8Array(0),
+    );
+}
+
+export function encodeGetImuSensitivity(): Uint8Array {
+    return encodeMsg(
+        OutCommandType.PERIPHERAL_COMMAND,
+        OutSubCommandType1.PERIPHERAL_TYPE_IMU,
+        OutSubCommandType2.GET_IMU_SENSITIVITY,
+        0,
+        new Uint8Array(0),
+    );
 }
 
 export function encodeStandbyStateGet(): Uint8Array {

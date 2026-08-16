@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { tapIncMsg, IncCommandType, IncSubCommandType1 } from '../src/parsers';
+import {
+    tapIncMsg,
+    configStateMsg,
+    IncCommandType,
+    IncSubCommandType1,
+    IncConfigStateSubCommandType1,
+} from '../src/parsers';
 
 function buildBuffer(bytes: number[]): DataView {
     const buffer = new ArrayBuffer(bytes.length);
@@ -101,6 +107,68 @@ describe('tapIncMsg', () => {
         expect(tapIncMsg(data)).toEqual({
             type: 'standby_state',
             data: true,
+        });
+    });
+
+    it('should parse config feature via CONFIG_STATE', () => {
+        const data = buildBuffer([
+            IncCommandType.CONFIG_STATE,
+            IncConfigStateSubCommandType1.FEATURE,
+            0,
+            0,
+            2,
+            1,
+        ]);
+
+        expect(tapIncMsg(data)).toEqual({
+            type: 'config_feature',
+            data: { featureNumber: 2, featureValue: true },
+        });
+    });
+
+    it('should parse config vision op mode', () => {
+        const data = buildBuffer([
+            IncCommandType.CONFIG_STATE,
+            IncConfigStateSubCommandType1.VISION_OP_MODE,
+            0,
+            0,
+            2,
+        ]);
+
+        expect(configStateMsg(data)).toEqual({
+            type: 'config_vision_op_mode',
+            data: 2,
+        });
+    });
+
+    it('should parse config vision model', () => {
+        const data = buildBuffer([
+            IncCommandType.CONFIG_STATE,
+            IncConfigStateSubCommandType1.VISION_MODEL,
+            0,
+            0,
+            1,
+        ]);
+
+        expect(configStateMsg(data)).toEqual({
+            type: 'config_vision_model',
+            data: 1,
+        });
+    });
+
+    it('should parse config imu sensitivity', () => {
+        const data = buildBuffer([
+            IncCommandType.CONFIG_STATE,
+            IncConfigStateSubCommandType1.IMU_SENSITIVITY,
+            0,
+            0,
+            5,
+            4,
+        ]);
+
+        expect(configStateMsg(data)).toEqual({
+            type: 'config_imu_sensitivity',
+            data: [5, 4],
         });
     });
 
