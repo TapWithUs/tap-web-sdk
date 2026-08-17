@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapSDK Web Demo</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #222;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #555;
+            font-size: 1.05em;
+        }
+        .subtitle {
+            color: #666;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .status.disconnected { background: #f8d7da; color: #721c24; }
+        .status.connected { background: #d4edda; color: #155724; }
+        .serial {
+            font-family: Consolas, Monaco, monospace;
+            font-size: 13px;
+            color: #555;
+            margin: -12px 0 16px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls, .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #0056b3; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover:not(:disabled) { background: #545b62; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #c82333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover:not(:disabled) { background: #218838; }
+        .btn-accent { background: #17a2b8; color: white; }
+        .btn-accent:hover:not(:disabled) { background: #138496; }
+        .hint { font-size: 12px; color: #888; margin: 10px 0 0; }
+        .hidden { display: none !important; }
+        .feature-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .feature-name {
+            flex: 1 1 180px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .feature-state {
+            min-width: 64px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .feature-state.on { background: #d4edda; color: #155724; }
+        .feature-state.off { background: #e9ecef; color: #636e72; }
+        .feature-state.unknown { background: #fff3cd; color: #856404; }
+        .feature-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #007bff;
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #888;
+            margin-top: 4px;
+        }
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 4px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .log-entry { margin: 4px 0; line-height: 1.4; }
+        .log-entry.tap { color: #4ec9b0; }
+        .log-entry.mouse { color: #9cdcfe; }
+        .log-entry.gesture { color: #ce9178; }
+        .log-entry.motion { color: #569cd6; }
+        .log-entry.raw { color: #b5cea8; }
+        .log-entry.standby { color: #c586c0; }
+        .log-entry.state { color: #dcdcaa; }
+        .log-entry.info { color: #dcdcaa; }
+        .log-entry.error { color: #f14c4c; }
+        .timestamp { color: #6a9955; margin-right: 8px; }
+        .log-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .log-filters label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        pre.info-block {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>TapSDK Web</h1>
+    <p class="subtitle">Unified demo — auto-detects v1 / v2 protocol</p>
+
+    <div class="warning">
+        <strong>Note:</strong> Web Bluetooth requires a secure context (HTTPS) or localhost.
+        Works in Chromium-based browsers (Chrome, Edge, Opera).
+    </div>
+
+    <div id="status" class="status disconnected">Status: Disconnected</div>
+    <div id="serial" class="serial hidden"></div>
+
+    <div class="section">
+        <h2>Connection</h2>
+        <div class="controls">
+            <button id="connectBtn" class="btn-primary">Connect to Tap</button>
+            <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
+            <button id="deviceInfoBtn" class="btn-accent" disabled>Device Info</button>
+            <button id="vibrateBtn" class="btn-success" disabled>Send Vibration</button>
+        </div>
+        <p class="hint">Uses <code>connect()</code> — returns TapSDKWeb or TapSDKWeb2 after protocol detect.</p>
+    </div>
+
+    <div id="deviceInfoSection" class="section hidden">
+        <h2>Device Info</h2>
+        <pre id="deviceInfoPre" class="info-block">—</pre>
+    </div>
+
+    <!-- v1 layout (matches pre-sync basic example) -->
+    <div id="v1Panel" class="hidden">
+        <div class="section">
+            <h2>Input Mode</h2>
+            <div class="mode-buttons">
+                <button id="textModeBtn" class="btn-secondary" disabled>Text Mode</button>
+                <button id="controllerModeBtn" class="btn-secondary" disabled>Controller Mode</button>
+                <button id="controllerTextModeBtn" class="btn-secondary" disabled>Controller + Text</button>
+                <button id="rawModeBtn" class="btn-secondary" disabled>Raw Mode</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Input Type (TapXR)</h2>
+            <div class="mode-buttons">
+                <button id="autoTypeBtn" class="btn-secondary" disabled>Auto</button>
+                <button id="mouseTypeBtn" class="btn-secondary" disabled>Mouse</button>
+                <button id="keyboardTypeBtn" class="btn-secondary" disabled>Keyboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- v2 layout (matches pre-sync TapSDK2 example) -->
+    <div id="v2Panel" class="hidden">
+        <div class="section">
+            <h2>Setup</h2>
+            <div class="controls">
+                <button id="setupBtn" class="btn-accent" disabled>Run Default Setup</button>
+            </div>
+            <p class="hint">Default setup enables model detection, sets air-gesture model, and starts vision streaming.</p>
+        </div>
+
+        <div class="section">
+            <h2>Device Features</h2>
+            <div class="feature-row">
+                <span class="feature-name">Model Detection</span>
+                <span id="modelDetectionState" class="feature-state unknown">—</span>
+                <div class="feature-actions">
+                    <button id="modelDetectionOnBtn" class="btn-success" disabled>Enable</button>
+                    <button id="modelDetectionOffBtn" class="btn-danger" disabled>Disable</button>
+                    <button id="modelDetectionGetBtn" class="btn-secondary" disabled>Get</button>
+                </div>
+            </div>
+            <div class="feature-row">
+                <span class="feature-name">IMU Motion Data</span>
+                <span id="imuMotionState" class="feature-state unknown">—</span>
+                <div class="feature-actions">
+                    <button id="imuMotionOnBtn" class="btn-success" disabled>Enable</button>
+                    <button id="imuMotionOffBtn" class="btn-danger" disabled>Disable</button>
+                    <button id="imuMotionGetBtn" class="btn-secondary" disabled>Get</button>
+                </div>
+            </div>
+            <div class="feature-row">
+                <span class="feature-name">Raw IMU Data</span>
+                <span id="rawImuState" class="feature-state unknown">—</span>
+                <div class="feature-actions">
+                    <button id="rawImuOnBtn" class="btn-success" disabled>Enable</button>
+                    <button id="rawImuOffBtn" class="btn-danger" disabled>Disable</button>
+                </div>
+            </div>
+            <div class="feature-row">
+                <span class="feature-name">Standby Gesture Detection</span>
+                <span id="standbyGestureState" class="feature-state unknown">—</span>
+                <div class="feature-actions">
+                    <button id="standbyGestureOnBtn" class="btn-success" disabled>Enable</button>
+                    <button id="standbyGestureOffBtn" class="btn-danger" disabled>Disable</button>
+                </div>
+            </div>
+            <p class="hint">State badges reflect commands sent from this page (Get reads device when available).</p>
+        </div>
+
+        <div class="section">
+            <h2>Vision Sensor</h2>
+            <div class="mode-buttons" style="margin-bottom: 10px;">
+                <button id="modelTappingBtn" class="btn-secondary" disabled>Tapping Model</button>
+                <button id="modelAirGestureBtn" class="btn-secondary" disabled>Air Gesture Model</button>
+                <button id="getVisionModelBtn" class="btn-secondary" disabled>Get Model</button>
+            </div>
+            <div class="mode-buttons">
+                <button id="modeTriggerBtn" class="btn-secondary" disabled>Trigger Mode</button>
+                <button id="modeStreamOnTriggerBtn" class="btn-secondary" disabled>Stream on Trigger</button>
+                <button id="modeStreamBtn" class="btn-secondary" disabled>Stream Mode</button>
+                <button id="getVisionModeBtn" class="btn-secondary" disabled>Get Mode</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>IMU &amp; Standby</h2>
+            <div class="mode-buttons">
+                <button id="imuSensBtn" class="btn-secondary" disabled>Set IMU Sensitivity (scaled)</button>
+                <button id="getImuSensBtn" class="btn-secondary" disabled>Get IMU Sensitivity</button>
+                <button id="standbyOnBtn" class="btn-secondary" disabled>Enter Standby</button>
+                <button id="standbyOffBtn" class="btn-secondary" disabled>Exit Standby</button>
+                <button id="standbyQueryBtn" class="btn-secondary" disabled>Query Standby State</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Live Stats</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTaps">0</div>
+                    <div class="stat-label">Taps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statGestures">0</div>
+                    <div class="stat-label">Gestures</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statMotion">0</div>
+                    <div class="stat-label">Motion pkts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRaw">0</div>
+                    <div class="stat-label">Raw samples</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statMotionRate">—</div>
+                    <div class="stat-label">Motion /s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statGestureRate">—</div>
+                    <div class="stat-label">Gestures /s</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Event Log</h2>
+        <div class="log-filters">
+            <span style="font-weight:500;">Filter:</span>
+            <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
+            <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
+            <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
+            <label><input type="checkbox" class="log-filter" value="motion" checked> Motion</label>
+            <label><input type="checkbox" class="log-filter" value="raw" checked> Raw</label>
+            <label><input type="checkbox" class="log-filter" value="standby" checked> Standby</label>
+            <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
+            <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
+            <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
+            <button id="clearLogBtn" class="btn-secondary" style="margin-left:auto;">Clear Log</button>
+        </div>
+        <div id="log" class="log-container"></div>
+    </div>
+
+    <script type="module">
+        import {
+            connect,
+            isTapSDKWeb2,
+            InputModeText,
+            InputModeController,
+            InputModeControllerText,
+            InputModeRaw,
+            InputType,
+            AirGestures,
+            UnifiedAirGestures,
+            FingerAcclSensitivity,
+            ImuGyroSensitivity,
+            ImuAcclSensitivity,
+            DeviceFeatures,
+            ModelTypes,
+            VisionSensorOpModes,
+        } from '../dist/tap-sdk-web.bundle.js';
+
+        let sdk = null;
+
+        const statusEl = document.getElementById('status');
+        const serialEl = document.getElementById('serial');
+        const logEl = document.getElementById('log');
+        const v1Panel = document.getElementById('v1Panel');
+        const v2Panel = document.getElementById('v2Panel');
+        const deviceInfoSection = document.getElementById('deviceInfoSection');
+        const deviceInfoPre = document.getElementById('deviceInfoPre');
+        const logFilters = document.querySelectorAll('.log-filter');
+
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const deviceInfoBtn = document.getElementById('deviceInfoBtn');
+        const vibrateBtn = document.getElementById('vibrateBtn');
+
+        const v1Buttons = [
+            'textModeBtn', 'controllerModeBtn', 'controllerTextModeBtn', 'rawModeBtn',
+            'autoTypeBtn', 'mouseTypeBtn', 'keyboardTypeBtn',
+        ].map((id) => document.getElementById(id));
+
+        const v2Buttons = [
+            'setupBtn',
+            'modelDetectionOnBtn', 'modelDetectionOffBtn', 'modelDetectionGetBtn',
+            'imuMotionOnBtn', 'imuMotionOffBtn', 'imuMotionGetBtn',
+            'rawImuOnBtn', 'rawImuOffBtn',
+            'standbyGestureOnBtn', 'standbyGestureOffBtn',
+            'modelTappingBtn', 'modelAirGestureBtn', 'getVisionModelBtn',
+            'modeTriggerBtn', 'modeStreamOnTriggerBtn', 'modeStreamBtn', 'getVisionModeBtn',
+            'imuSensBtn', 'getImuSensBtn', 'standbyOnBtn', 'standbyOffBtn', 'standbyQueryBtn',
+        ].map((id) => document.getElementById(id));
+
+        const featureUi = {
+            [DeviceFeatures.MODEL_DETECTION]: {
+                stateEl: document.getElementById('modelDetectionState'),
+            },
+            [DeviceFeatures.IMU_MOTION_DATA]: {
+                stateEl: document.getElementById('imuMotionState'),
+            },
+            [DeviceFeatures.RAW_IMU_DATA]: {
+                stateEl: document.getElementById('rawImuState'),
+            },
+            [DeviceFeatures.STANDBY_GESTURE_DETECTION]: {
+                stateEl: document.getElementById('standbyGestureState'),
+            },
+        };
+        const featureState = {
+            [DeviceFeatures.MODEL_DETECTION]: null,
+            [DeviceFeatures.IMU_MOTION_DATA]: null,
+            [DeviceFeatures.RAW_IMU_DATA]: null,
+            [DeviceFeatures.STANDBY_GESTURE_DETECTION]: null,
+        };
+
+        const stats = { taps: 0, gestures: 0, motion: 0, raw: 0 };
+        let motionWindow = [];
+        let gestureWindow = [];
+
+        function updateStats() {
+            document.getElementById('statTaps').textContent = String(stats.taps);
+            document.getElementById('statGestures').textContent = String(stats.gestures);
+            document.getElementById('statMotion').textContent = String(stats.motion);
+            document.getElementById('statRaw').textContent = String(stats.raw);
+            const now = Date.now();
+            motionWindow = motionWindow.filter((t) => now - t < 1000);
+            gestureWindow = gestureWindow.filter((t) => now - t < 1000);
+            document.getElementById('statMotionRate').textContent = String(motionWindow.length);
+            document.getElementById('statGestureRate').textContent = String(gestureWindow.length);
+        }
+
+        function resetStats() {
+            stats.taps = 0;
+            stats.gestures = 0;
+            stats.motion = 0;
+            stats.raw = 0;
+            motionWindow = [];
+            gestureWindow = [];
+            updateStats();
+        }
+
+        function renderFeatureState(feature) {
+            const ui = featureUi[feature];
+            if (!ui) return;
+            const value = featureState[feature];
+            ui.stateEl.className = 'feature-state ' + (value === true ? 'on' : value === false ? 'off' : 'unknown');
+            ui.stateEl.textContent = value === true ? 'ON' : value === false ? 'OFF' : '—';
+        }
+
+        function resetFeatureState() {
+            for (const feature of Object.keys(featureState)) {
+                featureState[feature] = null;
+                renderFeatureState(Number(feature));
+            }
+        }
+
+        function getEnabledFilters() {
+            const enabled = new Set();
+            logFilters.forEach((cb) => { if (cb.checked) enabled.add(cb.value); });
+            return enabled;
+        }
+
+        function applyFilters() {
+            const enabled = getEnabledFilters();
+            logEl.querySelectorAll('.log-entry').forEach((entry) => {
+                entry.style.display = enabled.has(entry.dataset.type || 'info') ? 'block' : 'none';
+            });
+        }
+
+        logFilters.forEach((cb) => cb.addEventListener('change', applyFilters));
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.dataset.type = type;
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            entry.innerHTML = `<span class="timestamp">[${time}]</span>${message}`;
+            entry.style.display = getEnabledFilters().has(type) ? 'block' : 'none';
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function setPanelButtons(buttons, enabled) {
+            for (const btn of buttons) btn.disabled = !enabled;
+        }
+
+        function setConnected(connected, protocol) {
+            statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+            statusEl.textContent = connected
+                ? `Status: Connected (${protocol})`
+                : 'Status: Disconnected';
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            deviceInfoBtn.disabled = !connected;
+            vibrateBtn.disabled = !connected;
+
+            const isV1 = connected && protocol === 'v1';
+            const isV2 = connected && protocol === 'v2';
+            v1Panel.classList.toggle('hidden', !isV1);
+            v2Panel.classList.toggle('hidden', !isV2);
+            setPanelButtons(v1Buttons, isV1);
+            setPanelButtons(v2Buttons, isV2);
+
+            if (!connected) {
+                deviceInfoSection.classList.add('hidden');
+                serialEl.classList.add('hidden');
+                serialEl.textContent = '';
+                resetFeatureState();
+                resetStats();
+            }
+        }
+
+        function wireCommon(current) {
+            current.registerDisconnectionEvents((id) => {
+                log(`Disconnected: ${id}`, 'error');
+                sdk = null;
+                setConnected(false);
+            });
+        }
+
+        function wireV1(current) {
+            current.registerConnectionEvents((s) => {
+                log(`Connected v1: ${s.identifier}`, 'info');
+                setConnected(true, 'v1');
+            });
+            current.registerTapEvents((_id, tapcode) => {
+                const fingers = tapcode.toString(2).padStart(5, '0').split('').reverse()
+                    .map((b, i) => b === '1' ? ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'][i] : null)
+                    .filter(Boolean).join(', ');
+                log(`Tap: ${tapcode} (${fingers || 'none'})`, 'tap');
+            });
+            current.registerMouseEvents((_id, vx, vy, proximity) => {
+                log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`, 'mouse');
+            });
+            current.registerAirGestureEvents((_id, gesture) => {
+                const name = Object.entries(AirGestures).find(([, v]) => v === gesture)?.[0] ?? gesture;
+                log(`Gesture: ${name}`, 'gesture');
+            });
+            current.registerAirGestureStateEvents((_id, mouseMode) => {
+                log(`Mouse mode: ${mouseMode}`, 'state');
+            });
+            current.registerRawDataEvents((_id, packets) => {
+                for (const pkt of packets) {
+                    log(`Raw [${pkt.type}] ts=${pkt.ts}: ${pkt.payload.map((v) => v.toFixed(2)).join(', ')}`, 'raw');
+                }
+            });
+        }
+
+        function wireV2(current) {
+            current.registerConnectionEvents((serial) => {
+                log(`Connected v2: ${serial}`, 'info');
+                if (serial) {
+                    serialEl.textContent = `Serial: ${serial}`;
+                    serialEl.classList.remove('hidden');
+                }
+                setConnected(true, 'v2');
+            });
+            current.registerTapEvents((_id, data) => {
+                stats.taps += 1;
+                updateStats();
+                log(`Tap: ${data[0]}`, 'tap');
+            });
+            current.registerAirGestureEvents((_id, data) => {
+                stats.gestures += 1;
+                gestureWindow.push(Date.now());
+                updateStats();
+                const code = data[0];
+                const name = Object.entries(UnifiedAirGestures).find(([, v]) => v === code)?.[0] ?? code;
+                log(`Gesture: ${name}`, 'gesture');
+            });
+            current.registerImuMotionDataEvents((_id, [vx, vy, prox, euler]) => {
+                stats.motion += 1;
+                motionWindow.push(Date.now());
+                updateStats();
+                log(`Motion: vx=${vx} vy=${vy} mouse=${prox} euler=[${euler.join(', ')}]`, 'motion');
+            });
+            current.registerRawDataEvents((_id, packets) => {
+                stats.raw += packets.length;
+                updateStats();
+                for (const pkt of packets) {
+                    log(`Raw [${pkt.type}] ts=${pkt.ts}`, 'raw');
+                }
+            });
+            current.registerStandbyStateEvents((_id, standby) => {
+                log(`Standby event: ${standby}`, 'standby');
+            });
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            log('Connecting (auto-detect protocol)...', 'info');
+            try {
+                sdk = await connect();
+                wireCommon(sdk);
+                if (isTapSDKWeb2(sdk)) {
+                    wireV2(sdk);
+                    if (sdk.serialNumber) {
+                        serialEl.textContent = `Serial: ${sdk.serialNumber}`;
+                        serialEl.classList.remove('hidden');
+                    }
+                    setConnected(true, 'v2');
+                    log(`Protocol: v2 — ${sdk.identifier}`, 'info');
+                } else {
+                    wireV1(sdk);
+                    setConnected(true, 'v1');
+                    log(`Protocol: v1 — ${sdk.identifier}`, 'info');
+                }
+            } catch (err) {
+                log(`Connection error: ${err.message || err}`, 'error');
+            }
+        });
+
+        disconnectBtn.addEventListener('click', () => {
+            sdk?.disconnect();
+            sdk = null;
+            setConnected(false);
+        });
+
+        deviceInfoBtn.addEventListener('click', async () => {
+            if (!sdk) return;
+            try {
+                const info = await sdk.getDeviceInfo();
+                deviceInfoPre.textContent = JSON.stringify(info, null, 2);
+                deviceInfoSection.classList.remove('hidden');
+                log('Device info loaded', 'info');
+            } catch (err) {
+                log(`Device info error: ${err.message || err}`, 'error');
+            }
+        });
+
+        vibrateBtn.addEventListener('click', async () => {
+            if (!sdk) return;
+            await sdk.sendVibrationSequence([100, 200, 100, 200, 500]);
+            log('Vibration sent', 'info');
+        });
+
+        // v1 handlers
+        document.getElementById('textModeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputMode(new InputModeText());
+            log('Text mode', 'info');
+        });
+        document.getElementById('controllerModeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputMode(new InputModeController());
+            log('Controller mode', 'info');
+        });
+        document.getElementById('controllerTextModeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputMode(new InputModeControllerText());
+            log('Controller+Text mode', 'info');
+        });
+        document.getElementById('rawModeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputMode(new InputModeRaw({
+                scaled: true,
+                fingerAcclSens: FingerAcclSensitivity.G16,
+                imuGyroSens: ImuGyroSensitivity.DPS500,
+                imuAcclSens: ImuAcclSensitivity.G4,
+            }));
+            log('Raw mode', 'info');
+        });
+        document.getElementById('autoTypeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputType(InputType.AUTO);
+            log('Input type AUTO', 'info');
+        });
+        document.getElementById('mouseTypeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputType(InputType.MOUSE);
+            log('Input type MOUSE', 'info');
+        });
+        document.getElementById('keyboardTypeBtn').addEventListener('click', async () => {
+            if (!sdk || isTapSDKWeb2(sdk)) return;
+            await sdk.setInputType(InputType.KEYBOARD);
+            log('Input type KEYBOARD', 'info');
+        });
+
+        // v2 handlers
+        async function setDeviceFeature(feature, enable) {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setFeature(feature, enable);
+            featureState[feature] = enable;
+            renderFeatureState(feature);
+            log(`Feature ${feature} => ${enable}`, 'info');
+        }
+
+        document.getElementById('modelDetectionOnBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.MODEL_DETECTION, true));
+        document.getElementById('modelDetectionOffBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.MODEL_DETECTION, false));
+        document.getElementById('imuMotionOnBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.IMU_MOTION_DATA, true));
+        document.getElementById('imuMotionOffBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.IMU_MOTION_DATA, false));
+        document.getElementById('rawImuOnBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.RAW_IMU_DATA, true));
+        document.getElementById('rawImuOffBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.RAW_IMU_DATA, false));
+        document.getElementById('standbyGestureOnBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.STANDBY_GESTURE_DETECTION, true));
+        document.getElementById('standbyGestureOffBtn').addEventListener('click', () => setDeviceFeature(DeviceFeatures.STANDBY_GESTURE_DETECTION, false));
+
+        document.getElementById('modelDetectionGetBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const value = await sdk.getFeature(DeviceFeatures.MODEL_DETECTION);
+            featureState[DeviceFeatures.MODEL_DETECTION] = value;
+            renderFeatureState(DeviceFeatures.MODEL_DETECTION);
+            log(`getFeature(MODEL_DETECTION)=${value}`, 'info');
+        });
+        document.getElementById('imuMotionGetBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const value = await sdk.getFeature(DeviceFeatures.IMU_MOTION_DATA);
+            featureState[DeviceFeatures.IMU_MOTION_DATA] = value;
+            renderFeatureState(DeviceFeatures.IMU_MOTION_DATA);
+            log(`getFeature(IMU_MOTION_DATA)=${value}`, 'info');
+        });
+
+        document.getElementById('setupBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await setDeviceFeature(DeviceFeatures.MODEL_DETECTION, true);
+            await sdk.setVisionSensorModel(ModelTypes.AIR_GESTURE);
+            await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
+            log('Default setup done', 'info');
+        });
+        document.getElementById('modelTappingBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setVisionSensorModel(ModelTypes.TAPPING);
+            log('Vision model TAPPING', 'info');
+        });
+        document.getElementById('modelAirGestureBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setVisionSensorModel(ModelTypes.AIR_GESTURE);
+            log('Vision model AIR_GESTURE', 'info');
+        });
+        document.getElementById('modeTriggerBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setVisionSensorOpMode(VisionSensorOpModes.TRIGGER);
+            log('Vision TRIGGER', 'info');
+        });
+        document.getElementById('modeStreamOnTriggerBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM_ON_TRIGGER);
+            log('Vision STREAM_ON_TRIGGER', 'info');
+        });
+        document.getElementById('modeStreamBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
+            log('Vision STREAM', 'info');
+        });
+        document.getElementById('imuSensBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setImuSensitivity(ImuAcclSensitivity.G4, ImuGyroSensitivity.DPS500, {
+                scaled: true,
+                fingerAcclSens: FingerAcclSensitivity.G16,
+            });
+            log('IMU sensitivity set (scaled)', 'info');
+        });
+        document.getElementById('standbyOnBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setStandbyState(true);
+            log('Standby ON', 'standby');
+        });
+        document.getElementById('standbyOffBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            await sdk.setStandbyState(false);
+            log('Standby OFF', 'standby');
+        });
+        document.getElementById('standbyQueryBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const value = await sdk.getStandbyState();
+            log(`getStandbyState=${value}`, 'standby');
+        });
+        document.getElementById('getVisionModeBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const value = await sdk.getVisionSensorOpMode();
+            log(`getVisionSensorOpMode=${value}`, 'info');
+        });
+        document.getElementById('getVisionModelBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const value = await sdk.getVisionSensorModel();
+            log(`getVisionSensorModel=${value}`, 'info');
+        });
+        document.getElementById('getImuSensBtn').addEventListener('click', async () => {
+            if (!sdk || !isTapSDKWeb2(sdk)) return;
+            const [gyro, xl] = await sdk.getImuSensitivity();
+            log(`getImuSensitivity gyro=${gyro} xl=${xl}`, 'info');
+        });
+
+        document.getElementById('clearLogBtn').addEventListener('click', () => {
+            logEl.innerHTML = '';
+        });
+
+        setInterval(updateStats, 250);
+
+        log('Ready. Click Connect — protocol auto-detects v1 or v2.', 'info');
+        setConnected(false);
+    </script>
+</body>
+</html>

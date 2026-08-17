@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
   pages: write
@@ -22,7 +25,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '24.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -34,11 +37,10 @@ jobs:
     - name: Prepare publish directory
       run: |
         mkdir -p publish/dist
-        cp examples/basic/index.html publish/index.html
+        cp examples/index.html publish/index.html
         cp dist/tap-sdk-web.bundle.js publish/dist/
         cp dist/tap-sdk-web.bundle.js.map publish/dist/
-        # Update the import path in index.html
-        sed -i "s|'../../dist/tap-sdk-web.bundle.js'|'./dist/tap-sdk-web.bundle.js'|g" publish/index.html
+        sed -i "s|'../dist/tap-sdk-web.bundle.js'|'./dist/tap-sdk-web.bundle.js'|g" publish/index.html
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3

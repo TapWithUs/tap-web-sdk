@@ -47,39 +47,27 @@ npm install /path/to/tap-web-sdk
 
 ```typescript
 import {
-    TapSDKWeb,
+    connect,
+    isTapSDKWeb2,
     InputModeController,
-    InputType,
 } from 'tap-sdk-web';
 
-const tap = new TapSDKWeb();
+// Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
+const sdk = await connect();
 
-// Register event callbacks
-tap.registerConnectionEvents((sdk) => {
-    console.log(`Connected to: ${sdk.identifier}`);
-});
+sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
-tap.registerTapEvents((identifier, tapcode) => {
-    // tapcode is a 5-bit bitmap: Thumb=1, Index=2, Middle=4, Ring=8, Pinky=16
-    console.log(`Tap detected: ${tapcode}`);
-});
+if (isTapSDKWeb2(sdk)) {
+    sdk.registerTapEvents((id, data) => console.log('Tap', data[0]));
+} else {
+    sdk.registerTapEvents((id, tapcode) => console.log('Tap', tapcode));
+    sdk.registerMouseEvents((id, vx, vy, proximity) => {
+        console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
+    });
+    await sdk.setInputMode(new InputModeController());
+}
 
-tap.registerMouseEvents((identifier, vx, vy, proximity) => {
-    console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
-});
-
-tap.registerAirGestureEvents((identifier, gesture) => {
-    console.log(`Air gesture: ${gesture}`);
-});
-
-// Connect (triggers browser device picker)
-await tap.connect();
-
-// Set input mode
-await tap.setInputMode(new InputModeController());
-
-// Send haptic feedback
-await tap.sendVibrationSequence([100, 200, 100]);
+await sdk.sendVibrationSequence([100, 200, 100]);
 ```
 
 ## API Reference
@@ -126,6 +114,7 @@ The main class for interacting with Tap devices.
 
 | Method | Description |
 |--------|-------------|
+| `getDeviceInfo()` | Read DIS/BAS + Tap device fields (`Promise<DeviceInfo>`) |
 | `setInputMode(mode)` | Set input mode (Text, Controller, ControllerText, Raw) |
 | `setInputType(type)` | Set input type for TapXR (Auto, Mouse, Keyboard) |
 | `sendVibrationSequence(durations)` | Send haptic feedback (array of durations in ms) |
@@ -184,6 +173,22 @@ Tap codes are 5-bit bitmaps representing which fingers tapped:
 
 Example: `tapcode = 3` means Thumb + Index tapped together.
 
+### Mouse Events & Orientation Data
+
+Mouse events include velocity, proximity, and device orientation (roll, pitch, yaw):
+
+```typescript
+tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
+    // vx, vy: Mouse velocity (signed integers)
+    // proximity: Boolean indicating if mouse is active
+    // roll, pitch, yaw: Orientation angles in degrees (signed integers)
+    console.log(`Velocity: (${vx}, ${vy}), Active: ${proximity}`);
+    console.log(`Orientation: roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`);
+});
+```
+
+**Note:** Orientation data (roll/pitch/yaw) may be zero if not available on older firmware versions or if the data packet is shorter than 16 bytes.
+
 ### Air Gestures
 
 ```typescript
@@ -215,7 +220,7 @@ await tap.sendVibrationSequence([100, 200, 100, 200, 500]);
 
 ## Testing the Example Locally
 
-The SDK includes a complete working example in the [examples/basic](./examples/basic/) directory.
+The SDK includes a unified demo in [examples/index.html](./examples/index.html).
 
 ### Prerequisites
 
@@ -248,8 +253,8 @@ npx http-server -p 8000
 
 3. **Open the example in your browser**:
 
-- If using `serve`: Open [http://localhost:3000/examples/basic/](http://localhost:3000/examples/basic/)
-- If using Python or http-server: Open [http://localhost:8000/examples/basic/](http://localhost:8000/examples/basic/)
+- If using `serve`: Open [http://localhost:3000/examples/](http://localhost:3000/examples/)
+- If using Python or http-server: Open [http://localhost:8000/examples/](http://localhost:8000/examples/)
 
 4. **Test the SDK**:
 
