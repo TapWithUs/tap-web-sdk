@@ -186,16 +186,28 @@
             margin-bottom: -1px;
         }
         .tab-btn:hover:not(:disabled) { background: #f8f9fa; color: #333; }
+        .tab-btn:focus { outline: none; }
+        .tab-btn:focus-visible {
+            color: #007bff;
+        }
         .tab-btn.is-active {
             color: #007bff;
             border-bottom-color: #007bff;
             font-weight: 600;
+        }
+        .controls-body {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         .tab-scroll {
             flex: 1;
             min-height: 0;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         .tab-panel { display: none; }
         .tab-panel.is-active { display: block; }
@@ -235,7 +247,7 @@
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
         .stat-card {
@@ -265,17 +277,25 @@
         }
         .log-toolbar {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 12px;
+            flex-direction: column;
+            gap: 8px;
             padding: 10px 12px 8px;
             flex-shrink: 0;
             border-bottom: 1px solid #333;
+        }
+        .log-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .log-toolbar h2 {
             margin: 0;
             color: #eee;
             margin-right: auto;
+        }
+        .log-title-row .btn-secondary {
+            padding: 8px 14px;
+            font-size: 13px;
         }
         .log-container {
             background: #1e1e1e;
@@ -286,6 +306,7 @@
             min-height: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 13px;
         }
@@ -343,8 +364,23 @@
             .connection-row { align-items: flex-start; }
             .workspace {
                 grid-template-columns: 1fr;
-                grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1.1fr) minmax(0, 0.9fr);
             }
+            .controls-body {
+                display: block;
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior: contain;
+            }
+            .tab-scroll {
+                overflow: visible;
+                flex: none;
+            }
+            .live-stats { margin-top: 8px; }
+            .tab-btn { padding: 8px 10px; font-size: 13px; }
+            .log-toolbar { padding: 8px; }
+            .log-filters { gap: 6px 8px; font-size: 12px; }
+            pre.info-block { max-height: 5rem; }
             button { padding: 10px 16px; }
         }
     </style>
@@ -395,7 +431,8 @@
                     <button type="button" class="tab-btn" role="tab" data-tab="vision" aria-selected="false">Vision</button>
                     <button type="button" class="tab-btn" role="tab" data-tab="imu" aria-selected="false">IMU</button>
                 </div>
-                <div class="tab-scroll">
+                <div class="controls-body">
+                    <div class="tab-scroll">
                     <p id="disconnectedHint" class="hint" style="margin-top:0;">
                         Connect a Tap to load controls. Input Mode is for v1. Features, Vision, and IMU are for v2.
                     </p>
@@ -534,11 +571,15 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </section>
 
             <section class="pane log-pane" aria-label="Event Log">
                 <div class="log-toolbar">
-                    <h2>Event Log</h2>
+                    <div class="log-title-row">
+                        <h2>Event Log</h2>
+                        <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
+                    </div>
                     <div class="log-filters">
                         <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
                         <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
@@ -549,7 +590,6 @@
                         <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
                         <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
                         <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
-                        <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
                     </div>
                 </div>
                 <div id="log" class="log-container"></div>
