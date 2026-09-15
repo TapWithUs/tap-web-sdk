@@ -6,43 +6,91 @@
     <title>TapSDK Web Demo</title>
     <style>
         * { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
             background: #f5f5f5;
             color: #222;
         }
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 1400px;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0 auto;
+            padding: 10px 12px;
+            overflow: hidden;
+        }
         h1 {
             color: #333;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
+            font-size: 1.35rem;
+            margin: 0;
+            padding: 0;
+            border: none;
+            line-height: 1.2;
         }
         h2 {
             margin-top: 0;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             color: #555;
             font-size: 1.05em;
         }
+        .title-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 16px;
+            flex-shrink: 0;
+        }
+        .brand {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 8px 10px;
+            min-width: 0;
+        }
         .subtitle {
             color: #666;
-            margin-top: -8px;
-            margin-bottom: 16px;
+            margin: 0;
             font-size: 14px;
+        }
+        .status-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
         }
         .warning {
             background: #fff3cd;
             color: #856404;
-            padding: 12px 15px;
+            padding: 8px 12px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin: 0;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        .warning summary {
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .warning p {
+            margin: 8px 0 0;
         }
         .status {
-            padding: 12px 15px;
+            padding: 8px 12px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin: 0;
             font-weight: bold;
+            font-size: 13px;
         }
         .status.disconnected { background: #f8d7da; color: #721c24; }
         .status.connected { background: #d4edda; color: #155724; }
@@ -50,14 +98,28 @@
             font-family: Consolas, Monaco, monospace;
             font-size: 13px;
             color: #555;
-            margin: -12px 0 16px;
+            margin: 0;
         }
         .section {
             background: white;
-            padding: 20px;
+            padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin: 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .connection-bar {
+            flex-shrink: 0;
+        }
+        .connection-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .connection-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 1.05em;
         }
         .controls, .mode-buttons {
             display: flex;
@@ -85,6 +147,60 @@
         .btn-accent:hover:not(:disabled) { background: #138496; }
         .hint { font-size: 12px; color: #888; margin: 10px 0 0; }
         .hidden { display: none !important; }
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 10px;
+        }
+        .pane {
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .controls-pane {
+            background: white;
+            padding: 12px 16px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            border-bottom: 1px solid #e5e5e5;
+            margin: 0 0 12px;
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            background: transparent;
+            color: #666;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 10px 14px;
+            font-size: 14px;
+            margin-bottom: -1px;
+        }
+        .tab-btn:hover:not(:disabled) { background: #f8f9fa; color: #333; }
+        .tab-btn.is-active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            font-weight: 600;
+        }
+        .tab-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.is-active { display: block; }
+        .control-group { margin-bottom: 16px; }
+        .control-group:last-child { margin-bottom: 0; }
         .feature-row {
             display: flex;
             flex-wrap: wrap;
@@ -111,19 +227,25 @@
         .feature-state.off { background: #e9ecef; color: #636e72; }
         .feature-state.unknown { background: #fff3cd; color: #856404; }
         .feature-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .live-stats {
+            flex-shrink: 0;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
         }
         .stat-card {
             background: #f8f9fa;
             border-radius: 8px;
-            padding: 14px;
+            padding: 10px 8px;
             text-align: center;
         }
         .stat-value {
-            font-size: 1.6em;
+            font-size: 1.35em;
             font-weight: 700;
             color: #007bff;
             font-variant-numeric: tabular-nums;
@@ -135,13 +257,35 @@
             color: #888;
             margin-top: 4px;
         }
+        .log-pane {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .log-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 10px 12px 8px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+        .log-toolbar h2 {
+            margin: 0;
+            color: #eee;
+            margin-right: auto;
+        }
         .log-container {
             background: #1e1e1e;
             color: #d4d4d4;
-            border-radius: 4px;
-            padding: 15px;
-            height: 400px;
+            border-radius: 0 0 8px 8px;
+            padding: 12px 15px;
+            flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 13px;
         }
@@ -159,10 +303,11 @@
         .log-filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px 12px;
             align-items: center;
-            margin-bottom: 10px;
+            margin: 0;
             font-size: 13px;
+            color: #ccc;
         }
         .log-filters label {
             display: flex;
@@ -171,188 +316,245 @@
             cursor: pointer;
             user-select: none;
         }
+        .device-info {
+            margin-top: 10px;
+        }
+        .device-info summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+        }
         pre.info-block {
             background: #f8f9fa;
             padding: 12px;
             border-radius: 6px;
             font-size: 12px;
-            overflow-x: auto;
-            margin: 0;
+            overflow: auto;
+            max-height: 8rem;
+            margin: 8px 0 0;
+        }
+        @media (max-width: 700px) {
+            .app-shell { padding: 8px; gap: 8px; }
+            .title-row { align-items: flex-start; }
+            .status-cluster {
+                margin-left: 0;
+                width: 100%;
+            }
+            .connection-row { align-items: flex-start; }
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+            }
+            button { padding: 10px 16px; }
         }
     </style>
 </head>
 <body>
-    <h1>TapSDK Web</h1>
-    <p class="subtitle">Unified demo — auto-detects v1 / v2 protocol</p>
-
-    <div class="warning">
-        <strong>Note:</strong> Web Bluetooth requires a secure context (HTTPS) or localhost.
-        Works in Chromium-based browsers (Chrome, Edge, Opera).
-    </div>
-
-    <div id="status" class="status disconnected">Status: Disconnected</div>
-    <div id="serial" class="serial hidden"></div>
-
-    <div class="section">
-        <h2>Connection</h2>
-        <div class="controls">
-            <button id="connectBtn" class="btn-primary">Connect to Tap</button>
-            <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
-            <button id="deviceInfoBtn" class="btn-accent" disabled>Device Info</button>
-            <button id="vibrateBtn" class="btn-success" disabled>Send Vibration</button>
-        </div>
-        <p class="hint">Uses <code>connect()</code> — returns TapSDKWeb or TapSDKWeb2 after protocol detect.</p>
-    </div>
-
-    <div id="deviceInfoSection" class="section hidden">
-        <h2>Device Info</h2>
-        <pre id="deviceInfoPre" class="info-block">—</pre>
-    </div>
-
-    <!-- v1 layout (matches pre-sync basic example) -->
-    <div id="v1Panel" class="hidden">
-        <div class="section">
-            <h2>Input Mode</h2>
-            <div class="mode-buttons">
-                <button id="textModeBtn" class="btn-secondary" disabled>Text Mode</button>
-                <button id="controllerModeBtn" class="btn-secondary" disabled>Controller Mode</button>
-                <button id="controllerTextModeBtn" class="btn-secondary" disabled>Controller + Text</button>
-                <button id="rawModeBtn" class="btn-secondary" disabled>Raw Mode</button>
+    <div class="app-shell">
+        <div class="title-row">
+            <div class="brand">
+                <h1>TapSDK Web</h1>
+                <p class="subtitle">Unified demo</p>
+            </div>
+            <div class="status-cluster">
+                <div id="status" class="status disconnected">Status: Disconnected</div>
+                <div id="serial" class="serial hidden"></div>
             </div>
         </div>
 
-        <div class="section">
-            <h2>Input Type (TapXR)</h2>
-            <div class="mode-buttons">
-                <button id="autoTypeBtn" class="btn-secondary" disabled>Auto</button>
-                <button id="mouseTypeBtn" class="btn-secondary" disabled>Mouse</button>
-                <button id="keyboardTypeBtn" class="btn-secondary" disabled>Keyboard</button>
-            </div>
-        </div>
-    </div>
+        <details class="warning">
+            <summary>Web Bluetooth needs HTTPS or localhost (Chrome, Edge, Opera)</summary>
+            <p>
+                Web Bluetooth requires a secure context (HTTPS) or localhost.
+                Works in Chromium-based browsers (Chrome, Edge, Opera).
+                <code>connect()</code> returns TapSDKWeb or TapSDKWeb2 after protocol detect.
+            </p>
+        </details>
 
-    <!-- v2 layout (matches pre-sync TapSDK2 example) -->
-    <div id="v2Panel" class="hidden">
-        <div class="section">
-            <h2>Setup</h2>
-            <div class="controls">
-                <button id="setupBtn" class="btn-accent" disabled>Run Default Setup</button>
-            </div>
-            <p class="hint">Default setup enables model detection, sets air-gesture model, and starts vision streaming.</p>
-        </div>
-
-        <div class="section">
-            <h2>Device Features</h2>
-            <div class="feature-row">
-                <span class="feature-name">Model Detection</span>
-                <span id="modelDetectionState" class="feature-state unknown">—</span>
-                <div class="feature-actions">
-                    <button id="modelDetectionOnBtn" class="btn-success" disabled>Enable</button>
-                    <button id="modelDetectionOffBtn" class="btn-danger" disabled>Disable</button>
-                    <button id="modelDetectionGetBtn" class="btn-secondary" disabled>Get</button>
+        <div class="section connection-bar">
+            <div class="connection-row">
+                <span class="connection-label">Connection</span>
+                <div class="controls">
+                    <button id="connectBtn" class="btn-primary">Connect</button>
+                    <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
+                    <button id="deviceInfoBtn" class="btn-accent" disabled>Device Info</button>
+                    <button id="vibrateBtn" class="btn-success" disabled>Vibrate</button>
                 </div>
             </div>
-            <div class="feature-row">
-                <span class="feature-name">IMU Motion Data</span>
-                <span id="imuMotionState" class="feature-state unknown">—</span>
-                <div class="feature-actions">
-                    <button id="imuMotionOnBtn" class="btn-success" disabled>Enable</button>
-                    <button id="imuMotionOffBtn" class="btn-danger" disabled>Disable</button>
-                    <button id="imuMotionGetBtn" class="btn-secondary" disabled>Get</button>
-                </div>
-            </div>
-            <div class="feature-row">
-                <span class="feature-name">Raw IMU Data</span>
-                <span id="rawImuState" class="feature-state unknown">—</span>
-                <div class="feature-actions">
-                    <button id="rawImuOnBtn" class="btn-success" disabled>Enable</button>
-                    <button id="rawImuOffBtn" class="btn-danger" disabled>Disable</button>
-                </div>
-            </div>
-            <div class="feature-row">
-                <span class="feature-name">Standby Gesture Detection</span>
-                <span id="standbyGestureState" class="feature-state unknown">—</span>
-                <div class="feature-actions">
-                    <button id="standbyGestureOnBtn" class="btn-success" disabled>Enable</button>
-                    <button id="standbyGestureOffBtn" class="btn-danger" disabled>Disable</button>
-                </div>
-            </div>
-            <p class="hint">State badges reflect commands sent from this page (Get reads device when available).</p>
+            <details id="deviceInfoSection" class="device-info hidden">
+                <summary>Device Info</summary>
+                <pre id="deviceInfoPre" class="info-block">—</pre>
+            </details>
         </div>
 
-        <div class="section">
-            <h2>Vision Sensor</h2>
-            <div class="mode-buttons" style="margin-bottom: 10px;">
-                <button id="modelTappingBtn" class="btn-secondary" disabled>Tapping Model</button>
-                <button id="modelAirGestureBtn" class="btn-secondary" disabled>Air Gesture Model</button>
-                <button id="getVisionModelBtn" class="btn-secondary" disabled>Get Model</button>
-            </div>
-            <div class="mode-buttons">
-                <button id="modeTriggerBtn" class="btn-secondary" disabled>Trigger Mode</button>
-                <button id="modeStreamOnTriggerBtn" class="btn-secondary" disabled>Stream on Trigger</button>
-                <button id="modeStreamBtn" class="btn-secondary" disabled>Stream Mode</button>
-                <button id="getVisionModeBtn" class="btn-secondary" disabled>Get Mode</button>
-            </div>
-        </div>
+        <div class="workspace">
+            <section class="pane controls-pane" aria-label="Controls">
+                <div class="tab-bar" role="tablist" aria-label="Control groups">
+                    <button type="button" class="tab-btn is-active" role="tab" data-tab="input" aria-selected="true">Input Mode</button>
+                    <button type="button" class="tab-btn" role="tab" data-tab="features" aria-selected="false">Features</button>
+                    <button type="button" class="tab-btn" role="tab" data-tab="vision" aria-selected="false">Vision</button>
+                    <button type="button" class="tab-btn" role="tab" data-tab="imu" aria-selected="false">IMU</button>
+                </div>
+                <div class="tab-scroll">
+                    <p id="disconnectedHint" class="hint" style="margin-top:0;">
+                        Connect a Tap to load controls. Input Mode is for v1. Features, Vision, and IMU are for v2.
+                    </p>
+                    <p id="tabFallback" class="hint hidden" style="margin-top:0;">
+                        This control group is not available for the connected protocol.
+                    </p>
 
-        <div class="section">
-            <h2>IMU &amp; Standby</h2>
-            <div class="mode-buttons">
-                <button id="imuSensBtn" class="btn-secondary" disabled>Set IMU Sensitivity (scaled)</button>
-                <button id="getImuSensBtn" class="btn-secondary" disabled>Get IMU Sensitivity</button>
-                <button id="standbyOnBtn" class="btn-secondary" disabled>Enter Standby</button>
-                <button id="standbyOffBtn" class="btn-secondary" disabled>Exit Standby</button>
-                <button id="standbyQueryBtn" class="btn-secondary" disabled>Query Standby State</button>
-            </div>
-        </div>
+                    <div id="v1Panel" class="hidden">
+                        <div class="tab-panel is-active" data-tab="input" role="tabpanel">
+                            <div class="control-group">
+                                <h2>Input Mode</h2>
+                                <div class="mode-buttons">
+                                    <button id="textModeBtn" class="btn-secondary" disabled>Text Mode</button>
+                                    <button id="controllerModeBtn" class="btn-secondary" disabled>Controller Mode</button>
+                                    <button id="controllerTextModeBtn" class="btn-secondary" disabled>Controller + Text</button>
+                                    <button id="rawModeBtn" class="btn-secondary" disabled>Raw Mode</button>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <h2>Input Type (TapXR)</h2>
+                                <div class="mode-buttons">
+                                    <button id="autoTypeBtn" class="btn-secondary" disabled>Auto</button>
+                                    <button id="mouseTypeBtn" class="btn-secondary" disabled>Mouse</button>
+                                    <button id="keyboardTypeBtn" class="btn-secondary" disabled>Keyboard</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="section">
-            <h2>Live Stats</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="statTaps">0</div>
-                    <div class="stat-label">Taps</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statGestures">0</div>
-                    <div class="stat-label">Gestures</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statMotion">0</div>
-                    <div class="stat-label">Motion pkts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statRaw">0</div>
-                    <div class="stat-label">Raw samples</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statMotionRate">—</div>
-                    <div class="stat-label">Motion /s</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statGestureRate">—</div>
-                    <div class="stat-label">Gestures /s</div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <div id="v2Panel" class="hidden">
+                        <div class="tab-panel" data-tab="features" role="tabpanel">
+                            <div class="control-group">
+                                <h2>Setup</h2>
+                                <div class="controls">
+                                    <button id="setupBtn" class="btn-accent" disabled>Run Default Setup</button>
+                                </div>
+                                <p class="hint">Default setup enables model detection, sets air-gesture model, and starts vision streaming.</p>
+                            </div>
+                            <div class="control-group">
+                                <h2>Device Features</h2>
+                                <div class="feature-row">
+                                    <span class="feature-name">Model Detection</span>
+                                    <span id="modelDetectionState" class="feature-state unknown">—</span>
+                                    <div class="feature-actions">
+                                        <button id="modelDetectionOnBtn" class="btn-success" disabled>Enable</button>
+                                        <button id="modelDetectionOffBtn" class="btn-danger" disabled>Disable</button>
+                                        <button id="modelDetectionGetBtn" class="btn-secondary" disabled>Get</button>
+                                    </div>
+                                </div>
+                                <div class="feature-row">
+                                    <span class="feature-name">IMU Motion Data</span>
+                                    <span id="imuMotionState" class="feature-state unknown">—</span>
+                                    <div class="feature-actions">
+                                        <button id="imuMotionOnBtn" class="btn-success" disabled>Enable</button>
+                                        <button id="imuMotionOffBtn" class="btn-danger" disabled>Disable</button>
+                                        <button id="imuMotionGetBtn" class="btn-secondary" disabled>Get</button>
+                                    </div>
+                                </div>
+                                <div class="feature-row">
+                                    <span class="feature-name">Raw IMU Data</span>
+                                    <span id="rawImuState" class="feature-state unknown">—</span>
+                                    <div class="feature-actions">
+                                        <button id="rawImuOnBtn" class="btn-success" disabled>Enable</button>
+                                        <button id="rawImuOffBtn" class="btn-danger" disabled>Disable</button>
+                                    </div>
+                                </div>
+                                <div class="feature-row">
+                                    <span class="feature-name">Standby Gesture Detection</span>
+                                    <span id="standbyGestureState" class="feature-state unknown">—</span>
+                                    <div class="feature-actions">
+                                        <button id="standbyGestureOnBtn" class="btn-success" disabled>Enable</button>
+                                        <button id="standbyGestureOffBtn" class="btn-danger" disabled>Disable</button>
+                                    </div>
+                                </div>
+                                <p class="hint">State badges reflect commands sent from this page (Get reads device when available).</p>
+                            </div>
+                        </div>
 
-    <div class="section">
-        <h2>Event Log</h2>
-        <div class="log-filters">
-            <span style="font-weight:500;">Filter:</span>
-            <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
-            <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
-            <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
-            <label><input type="checkbox" class="log-filter" value="motion" checked> Motion</label>
-            <label><input type="checkbox" class="log-filter" value="raw" checked> Raw</label>
-            <label><input type="checkbox" class="log-filter" value="standby" checked> Standby</label>
-            <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
-            <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
-            <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
-            <button id="clearLogBtn" class="btn-secondary" style="margin-left:auto;">Clear Log</button>
+                        <div class="tab-panel" data-tab="vision" role="tabpanel">
+                            <div class="control-group">
+                                <h2>Vision Sensor</h2>
+                                <div class="mode-buttons" style="margin-bottom: 10px;">
+                                    <button id="modelTappingBtn" class="btn-secondary" disabled>Tapping Model</button>
+                                    <button id="modelAirGestureBtn" class="btn-secondary" disabled>Air Gesture Model</button>
+                                    <button id="getVisionModelBtn" class="btn-secondary" disabled>Get Model</button>
+                                </div>
+                                <div class="mode-buttons">
+                                    <button id="modeTriggerBtn" class="btn-secondary" disabled>Trigger Mode</button>
+                                    <button id="modeStreamOnTriggerBtn" class="btn-secondary" disabled>Stream on Trigger</button>
+                                    <button id="modeStreamBtn" class="btn-secondary" disabled>Stream Mode</button>
+                                    <button id="getVisionModeBtn" class="btn-secondary" disabled>Get Mode</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-panel" data-tab="imu" role="tabpanel">
+                            <div class="control-group">
+                                <h2>IMU &amp; Standby</h2>
+                                <div class="mode-buttons">
+                                    <button id="imuSensBtn" class="btn-secondary" disabled>Set IMU Sensitivity (scaled)</button>
+                                    <button id="getImuSensBtn" class="btn-secondary" disabled>Get IMU Sensitivity</button>
+                                    <button id="standbyOnBtn" class="btn-secondary" disabled>Enter Standby</button>
+                                    <button id="standbyOffBtn" class="btn-secondary" disabled>Exit Standby</button>
+                                    <button id="standbyQueryBtn" class="btn-secondary" disabled>Query Standby State</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="liveStats" class="live-stats hidden">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statTaps">0</div>
+                            <div class="stat-label">Taps</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statGestures">0</div>
+                            <div class="stat-label">Gestures</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statMotion">0</div>
+                            <div class="stat-label">Motion pkts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statRaw">0</div>
+                            <div class="stat-label">Raw samples</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statMotionRate">—</div>
+                            <div class="stat-label">Motion /s</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statGestureRate">—</div>
+                            <div class="stat-label">Gestures /s</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pane log-pane" aria-label="Event Log">
+                <div class="log-toolbar">
+                    <h2>Event Log</h2>
+                    <div class="log-filters">
+                        <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
+                        <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
+                        <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
+                        <label><input type="checkbox" class="log-filter" value="motion" checked> Motion</label>
+                        <label><input type="checkbox" class="log-filter" value="raw" checked> Raw</label>
+                        <label><input type="checkbox" class="log-filter" value="standby" checked> Standby</label>
+                        <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
+                        <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
+                        <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
+                        <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
+                    </div>
+                </div>
+                <div id="log" class="log-container"></div>
+            </section>
         </div>
-        <div id="log" class="log-container"></div>
     </div>
 
     <script type="module">
@@ -383,6 +585,9 @@
         const v2Panel = document.getElementById('v2Panel');
         const deviceInfoSection = document.getElementById('deviceInfoSection');
         const deviceInfoPre = document.getElementById('deviceInfoPre');
+        const liveStats = document.getElementById('liveStats');
+        const disconnectedHint = document.getElementById('disconnectedHint');
+        const tabFallback = document.getElementById('tabFallback');
         const logFilters = document.querySelectorAll('.log-filter');
 
         const connectBtn = document.getElementById('connectBtn');
@@ -430,6 +635,25 @@
         const stats = { taps: 0, gestures: 0, motion: 0, raw: 0 };
         let motionWindow = [];
         let gestureWindow = [];
+
+        function setActiveTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach((btn) => {
+                const on = btn.dataset.tab === tabId;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            document.querySelectorAll('.tab-panel').forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.tab === tabId);
+            });
+            const connected = !v1Panel.classList.contains('hidden') || !v2Panel.classList.contains('hidden');
+            const activePanel = document.querySelector('.tab-panel.is-active');
+            const available = !!(activePanel && !activePanel.closest('.hidden'));
+            tabFallback.classList.toggle('hidden', !connected || available);
+        }
+
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+        });
 
         function updateStats() {
             document.getElementById('statTaps').textContent = String(stats.taps);
@@ -512,11 +736,18 @@
             const isV2 = connected && protocol === 'v2';
             v1Panel.classList.toggle('hidden', !isV1);
             v2Panel.classList.toggle('hidden', !isV2);
+            liveStats.classList.toggle('hidden', !isV2);
+            disconnectedHint.classList.toggle('hidden', connected);
             setPanelButtons(v1Buttons, isV1);
             setPanelButtons(v2Buttons, isV2);
 
+            if (isV1) setActiveTab('input');
+            else if (isV2) setActiveTab('features');
+            else setActiveTab('input');
+
             if (!connected) {
                 deviceInfoSection.classList.add('hidden');
+                deviceInfoSection.open = false;
                 serialEl.classList.add('hidden');
                 serialEl.textContent = '';
                 resetFeatureState();
@@ -635,6 +866,7 @@
                 const info = await sdk.getDeviceInfo();
                 deviceInfoPre.textContent = JSON.stringify(info, null, 2);
                 deviceInfoSection.classList.remove('hidden');
+                deviceInfoSection.open = true;
                 log('Device info loaded', 'info');
             } catch (err) {
                 log(`Device info error: ${err.message || err}`, 'error');
