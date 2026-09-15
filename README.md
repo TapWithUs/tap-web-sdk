@@ -1,22 +1,28 @@
 # TapSDK Web
 
-A TypeScript/JavaScript SDK for communicating with [Tap Strap](https://www.tapwithus.com/) devices in the browser using Web Bluetooth.
+TypeScript/JavaScript SDK for [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/) in the browser via [Web Bluetooth](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API).
+
+**Package name:** `tap-sdk-web` · **Repo:** [TapWithUs/tap-web-sdk](https://github.com/TapWithUs/tap-web-sdk) · **Not on npm** — clone, build, and link from source until publish.
+
 #### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
+
+Official docs: [Web SDK](https://dev.tapwithus.com/docs/web/) · [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/)
+
+**Hardware:** Tap Strap and TapXR are the documented first-run targets. [Tap Band](https://www.tapwithus.com/tapband-waitlist/) is on a waitlist — not an SDK first-run path. TapXR air gestures are a gesture subset of Band; do not invent missing-gesture lists.
 
 ## Browser Support
 
-This SDK uses the [Web Bluetooth API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) which is supported in:
+Web Bluetooth works in:
+
 - **Chrome** (Desktop & Android)
 - **Edge**
 - **Opera**
 
-> **Note:** Safari and Firefox do not support Web Bluetooth. The page must be served over HTTPS or localhost.
+Safari and Firefox are **not** supported. The page must be served over **HTTPS** or **localhost**. Pair/connect requires a user gesture that calls `navigator.bluetooth.requestDevice()` (for example a button click).
 
 ## Installation
 
-### For Development
-
-Clone the repository and build the SDK:
+> **Not published to npm.** Install from a local clone.
 
 ```bash
 git clone https://github.com/TapWithUs/tap-web-sdk.git
@@ -25,9 +31,7 @@ npm install
 npm run build
 ```
 
-### Using in Your Project
-
-Link the SDK locally for development:
+Link into your app:
 
 ```bash
 # In the tap-web-sdk directory
@@ -37,13 +41,17 @@ npm link
 npm link tap-sdk-web
 ```
 
-Or install directly from the local path:
+Or install from a local path:
 
 ```bash
 npm install /path/to/tap-web-sdk
 ```
 
 ## Quick Start
+
+**First win:** connect, then enable **Controller** on v1 so tap callbacks fire. Devices boot in Text / HID keyboard mode — Text is silent to the SDK (no tap events).
+
+Call `connect()` from a user gesture (button click). It opens the browser device picker via Web Bluetooth.
 
 ```typescript
 import {
@@ -53,13 +61,16 @@ import {
 } from 'tap-sdk-web';
 
 // Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
+// Must run from a user gesture (e.g. button onclick)
 const sdk = await connect();
 
 sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
 if (isTapSDKWeb2(sdk)) {
+    // v2 tap payload shape differs (list) — follow this callback signature
     sdk.registerTapEvents((id, data) => console.log('Tap', data[0]));
 } else {
+    // v1: Controller mode is required for tap callbacks
     sdk.registerTapEvents((id, tapcode) => console.log('Tap', tapcode));
     sdk.registerMouseEvents((id, vx, vy, proximity) => {
         console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
@@ -69,6 +80,8 @@ if (isTapSDKWeb2(sdk)) {
 
 await sdk.sendVibrationSequence([100, 200, 100]);
 ```
+
+> **Zero events?** On v1 you almost certainly stayed in Text mode. Call `await sdk.setInputMode(new InputModeController())` after connect. Wrong browser, missing HTTPS/localhost, or connecting without a user gesture also yield silence.
 
 ## API Reference
 
@@ -129,7 +142,7 @@ import {
     InputModeRaw,
 } from 'tap-sdk-web';
 
-// Text mode - taps generate keyboard characters
+// Text mode - taps generate keyboard characters (silent to the SDK)
 await tap.setInputMode(new InputModeText());
 
 // Controller mode - taps generate raw tap codes + mouse/gesture events
@@ -191,6 +204,8 @@ tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
 
 ### Air Gestures
 
+TapXR only. Use enums from this package; do not invent gesture lists.
+
 ```typescript
 import { AirGestures } from 'tap-sdk-web';
 
@@ -205,7 +220,7 @@ tap.registerAirGestureEvents((identifier, gesture) => {
         case AirGestures.DOWN_ONE_FINGER:
             console.log('Swipe down');
             break;
-        // ... etc
+        // ... see AirGestures in the package
     }
 });
 ```
@@ -225,7 +240,7 @@ The SDK includes a unified demo in [examples/index.html](./examples/index.html).
 ### Prerequisites
 
 - A Chromium-based browser (Chrome, Edge, or Opera)
-- A Tap Strap device
+- A Tap Strap or TapXR device
 - HTTPS or localhost (required for Web Bluetooth)
 
 ### Steps to Run
@@ -258,18 +273,19 @@ npx http-server -p 8000
 
 4. **Test the SDK**:
 
-- Click "Connect to Tap" to open the browser's Bluetooth device picker
+- Click "Connect to Tap" to open the browser's Bluetooth device picker (user gesture required)
 - Select your Tap device
-- Try different input modes (Controller Mode recommended for testing)
+- Use **Controller Mode** for tap callbacks (default Text mode is silent to the SDK)
 - Tap your fingers to see events in the log
 - Test haptic feedback with the "Send Vibration" button
 
 ### Troubleshooting
 
-- **"Bluetooth not available"**: Make sure you're using Chrome, Edge, or Opera (not Safari/Firefox)
-- **"Connection failed"**: Ensure your Tap device is powered on and not connected to another device
-- **"HTTPS required"**: The example works on `localhost`, but if deploying, you need HTTPS
-- **No events appearing**: Try switching to Controller Mode - Text Mode may not generate tap events in the browser
+- **"Bluetooth not available"**: Use Chrome, Edge, or Opera (not Safari/Firefox); serve over HTTPS or localhost
+- **"Connection failed"**: Ensure the Tap is powered on and not connected to another host
+- **"HTTPS required"**: `localhost` works; remote hosts need HTTPS
+- **No events appearing**: On v1, switch to Controller mode — Text mode does not deliver SDK tap callbacks
+- **User gesture**: Call `connect()` from a click/tap handler, not on page load
 
 ## Development
 
