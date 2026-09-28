@@ -294,19 +294,19 @@ npm version patch   # or minor / major
 git push origin master --follow-tags
 ```
 
-`npm version` updates `package.json` and creates a tag such as `v0.1.0`.
+`npm version` updates `package.json` and creates a tag such as `v0.9.1`.
 
 2. Push the tag. The **Publish to npm** GitHub Actions workflow then publishes `@tapwithus/tap-web-sdk` to the public npm registry.
 
 The workflow needs a repository secret named `NPM_TOKEN`. Create an npm Automation token for the `@tapwithus` organization with publish rights. Do not put the token in the repository.
 
-For the first public release (`0.1.0`), after this change is on `master`:
+The first public release is `0.9.0`, the same version as [tap-python-sdk](https://pypi.org/project/tap-python-sdk/) on PyPI. After this change is on `master`:
 
 ```bash
 git checkout master
 git pull
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.9.0
+git push origin v0.9.0
 ```
 
 ## License

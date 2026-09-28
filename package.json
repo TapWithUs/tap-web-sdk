@@ -1,6 +1,6 @@
 {
   "name": "@tapwithus/tap-web-sdk",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "description": "TapSDK for browsers using Web Bluetooth (Chromium-only)",
   "author": "Tap With Us",
   "license": "MIT",
