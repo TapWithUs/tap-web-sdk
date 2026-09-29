@@ -15,7 +15,7 @@ This SDK uses the [Web Bluetooth API](https://developer.mozilla.org/en-US/docs/W
 ## Installation
 
 ```bash
-npm install @tapwithus/tap-web-sdk
+npm install @tapwithus/tapsdk
 ```
 
 The [GitHub Pages demo](https://tapwithus.github.io/tap-web-sdk) is unchanged. It loads the built bundle from this repository. It does not install the npm package.
@@ -38,7 +38,7 @@ To link a local build into another project:
 npm link
 
 # In your project directory
-npm link @tapwithus/tap-web-sdk
+npm link @tapwithus/tapsdk
 ```
 
 ## Quick Start
@@ -48,7 +48,7 @@ import {
     connect,
     isTapSDKWeb2,
     InputModeController,
-} from '@tapwithus/tap-web-sdk';
+} from '@tapwithus/tapsdk';
 
 // Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
 const sdk = await connect();
@@ -125,7 +125,7 @@ import {
     InputModeController,
     InputModeControllerText,
     InputModeRaw,
-} from '@tapwithus/tap-web-sdk';
+} from '@tapwithus/tapsdk';
 
 // Text mode - taps generate keyboard characters
 await tap.setInputMode(new InputModeText());
@@ -137,7 +137,7 @@ await tap.setInputMode(new InputModeController());
 await tap.setInputMode(new InputModeControllerText());
 
 // Raw mode - IMU and accelerometer data
-import { FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity } from '@tapwithus/tap-web-sdk';
+import { FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity } from '@tapwithus/tapsdk';
 
 await tap.setInputMode(new InputModeRaw({
     scaled: true,
@@ -150,7 +150,7 @@ await tap.setInputMode(new InputModeRaw({
 ### Input Types (TapXR)
 
 ```typescript
-import { InputType } from '@tapwithus/tap-web-sdk';
+import { InputType } from '@tapwithus/tapsdk';
 
 await tap.setInputType(InputType.AUTO);     // Auto-detect
 await tap.setInputType(InputType.MOUSE);    // Mouse mode
@@ -190,7 +190,7 @@ tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
 ### Air Gestures
 
 ```typescript
-import { AirGestures } from '@tapwithus/tap-web-sdk';
+import { AirGestures } from '@tapwithus/tapsdk';
 
 tap.registerAirGestureEvents((identifier, gesture) => {
     switch (gesture) {
@@ -296,7 +296,7 @@ git push origin master --follow-tags
 
 `npm version` updates `package.json` and creates a tag such as `v0.9.1`.
 
-2. Push the tag. The **Publish to npm** GitHub Actions workflow then publishes `@tapwithus/tap-web-sdk` to the public npm registry.
+2. Push the tag. The **Publish to npm** GitHub Actions workflow then publishes `@tapwithus/tapsdk` to the public npm registry.
 
 The workflow needs a repository secret named `NPM_TOKEN`. Create an npm Automation token for the `@tapwithus` organization with publish rights. Do not put the token in the repository.
 

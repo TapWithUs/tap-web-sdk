@@ -1,5 +1,5 @@
 {
-  "name": "@tapwithus/tap-web-sdk",
+  "name": "@tapwithus/tapsdk",
   "version": "0.9.0",
   "description": "TapSDK for browsers using Web Bluetooth (Chromium-only)",
   "author": "Tap With Us",
