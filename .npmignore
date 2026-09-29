@@ -1,0 +1,4 @@
+# Keep tests out of the published tarball even if they sit under src/.
+**/*.test.ts
+tests/
+coverage/

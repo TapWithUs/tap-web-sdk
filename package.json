@@ -1,7 +1,20 @@
 {
-  "name": "tap-sdk-web",
-  "version": "0.1.0",
+  "name": "@tapwithus/tapsdk",
+  "version": "0.9.0",
   "description": "TapSDK for browsers using Web Bluetooth (Chromium-only)",
+  "author": "Tap With Us",
+  "license": "MIT",
+  "homepage": "https://github.com/TapWithUs/tap-web-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/TapWithUs/tap-web-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TapWithUs/tap-web-sdk.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,13 +26,15 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run bundle",
-    "bundle": "esbuild src/index.ts --bundle --format=esm --outfile=dist/tap-sdk-web.bundle.js --sourcemap",
+    "bundle": "esbuild src/index.ts --bundle --format=esm --outfile=dist/tap-web-sdk.bundle.js --sourcemap",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm test && npm run build"
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "!src/**/*.test.ts"
   ],
   "keywords": [
     "tap",
@@ -29,7 +44,6 @@
     "web-bluetooth",
     "ble"
   ],
-  "license": "MIT",
   "devDependencies": {
     "@types/web-bluetooth": "^0.0.21",
     "esbuild": "^0.27.2",
