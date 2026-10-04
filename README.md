@@ -289,7 +289,7 @@ npm run test:watch
 
 This package uses npm Trusted Publishing (OIDC). A `v*` tag push publishes `@tapwithus/tapsdk` to the public registry. The workflow does not use `NPM_TOKEN`.
 
-One-time setup: on [the package settings](https://www.npmjs.com/package/@tapwithus/tapsdk) add a GitHub Actions trusted publisher for `TapWithUs/tap-web-sdk`, workflow filename `npm-publish.yml`, no environment. Check **Allow npm publish**. Leave **Allow npm dist-tag** unchecked. npm does not let you edit an existing publisher; delete it and create a new one if the current connection is stage-only.
+One-time setup: on [the package settings](https://www.npmjs.com/package/@tapwithus/tapsdk) the GitHub Actions trusted publisher for `TapWithUs/tap-web-sdk`, workflow filename `npm-publish.yml`, no environment, must have **Allow npm publish** checked. Leave **Allow npm dist-tag** unchecked. Edit the current publisher if it is still stage-only.
 
 1. Bump the version and push a tag:
 
