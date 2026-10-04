@@ -1,24 +1,24 @@
 ---
 name: tap-sdk-web
 description: >-
-  Build browser apps with Tap Strap / TapXR via tap-sdk-web (Web Bluetooth).
+  Build browser apps with Tap Strap / TapXR via @tapwithus/tapsdk (Web Bluetooth).
   Use when connecting Tap in Chrome/Edge/Opera, wiring tap callbacks, Controller
-  mode, or debugging zero events. Package is NOT on npm — clone and link.
+  mode, or debugging zero events. Install with npm install @tapwithus/tapsdk.
 ---
 
-# tap-sdk-web (app builders)
+# tap-sdk-web / @tapwithus/tapsdk (app builders)
 
 Use this skill when integrating **Tap** into a web app with the Web SDK.
 
 ## Hard constraints
 
-- **Not on npm.** Package name is `tap-sdk-web`; repo is `TapWithUs/tap-web-sdk`. Install via clone + `npm install` + `npm run build`, then `npm link` or path install. Do **not** tell users to install from the npm registry.
+- **Package:** `@tapwithus/tapsdk` on npm. Repo is `TapWithUs/tap-web-sdk`. Install with `npm install @tapwithus/tapsdk`. For local unreleased SDK work, clone + build + `npm link @tapwithus/tapsdk`.
 - **Hardware first-run:** Tap Strap and TapXR only. Tap Band is waitlist-only (https://www.tapwithus.com/tapband-waitlist/) — not an SDK target.
 - **XR gestures:** subset of Band; do **not invent** missing-gesture lists — use package enums.
 - **Browsers:** Chrome, Edge, Opera only. Safari/Firefox unsupported. Page must be HTTPS or localhost.
 - **Connect:** `connect()` → `requestDevice()` needs a **user gesture** (button click).
 - **v1 taps:** call `setInputMode(new InputModeController())` after connect. **Text mode is silent to the SDK.**
-- **APIs:** only use exports from `tap-sdk-web` / this repo. Do **not invent** methods, UUIDs, or payload shapes. v2 tapcode may be a list (not int) — follow `TapSDKWeb2` types.
+- **APIs:** only use exports from `@tapwithus/tapsdk` / this repo. Do **not invent** methods, UUIDs, or payload shapes. v2 tapcode may be a list (not int) — follow `TapSDKWeb2` types.
 
 ## Docs
 
@@ -30,13 +30,19 @@ Use this skill when integrating **Tap** into a web app with the Web SDK.
 ## Install
 
 ```bash
+npm install @tapwithus/tapsdk
+```
+
+Local SDK link (optional):
+
+```bash
 git clone https://github.com/TapWithUs/tap-web-sdk.git
 cd tap-web-sdk
 npm install
 npm run build
 npm link
 # in your app:
-npm link tap-sdk-web
+npm link @tapwithus/tapsdk
 ```
 
 ## First win
@@ -46,7 +52,7 @@ import {
     connect,
     isTapSDKWeb2,
     InputModeController,
-} from 'tap-sdk-web';
+} from '@tapwithus/tapsdk';
 
 // From a button click handler:
 const sdk = await connect();
@@ -69,7 +75,7 @@ if (isTapSDKWeb2(sdk)) {
 
 ## Out of scope for this skill
 
-- Publishing to npm
+- Changing npm Trusted Publishing / release workflow (unless the user asks)
 - Editing the developer portal site
 - Python or mobile SDKs (except as behavior reference)
 - Treating Tap Band as a supported first-run device
