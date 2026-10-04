@@ -11,6 +11,8 @@ Official portal: [Web SDK](https://dev.tapwithus.com/docs/web/) · [Getting star
 
 ## For app builders
 
+Portal index for agents: [llms.txt](https://dev.tapwithus.com/llms.txt) · Web SDK guide: [docs/web](https://dev.tapwithus.com/docs/web/).
+
 ### What this package is
 
 Browser TypeScript/JavaScript SDK for Tap devices over **Web Bluetooth**. Same Controller-mode model as the native/Python SDKs.
