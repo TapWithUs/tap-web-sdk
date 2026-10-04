@@ -12,7 +12,7 @@ Use this skill when integrating **Tap** into a web app with the Web SDK.
 
 ## Hard constraints
 
-- **Package:** `@tapwithus/tapsdk` on npm. Repo is `TapWithUs/tap-web-sdk`. Install with `npm install @tapwithus/tapsdk`. For local unreleased SDK work, clone + build + `npm link @tapwithus/tapsdk`.
+- **Package (published):** `npm install @tapwithus/tapsdk` (latest **0.9.0**). Repo is `TapWithUs/tap-web-sdk`. Clone + build + `npm link` is **only** for unreleased local SDK development — not the app-builder first path.
 - **Hardware first-run:** Tap Strap and TapXR only. Tap Band is waitlist-only (https://www.tapwithus.com/tapband-waitlist/) — not an SDK target.
 - **XR gestures:** subset of Band; do **not invent** missing-gesture lists — use package enums.
 - **Browsers:** Chrome, Edge, Opera only. Safari/Firefox unsupported. Page must be HTTPS or localhost.
@@ -27,7 +27,7 @@ Use this skill when integrating **Tap** into a web app with the Web SDK.
 - How Tap works: https://dev.tapwithus.com/docs/how-tap-works/
 - Repo README and `AGENTS.md` (For app builders)
 
-## Install package
+## Install package (app builders)
 
 ```bash
 npm install @tapwithus/tapsdk
@@ -41,7 +41,7 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-
 # or: bash -s -- cursor | claude | all
 ```
 
-Local SDK link (optional): clone `tap-web-sdk`, `npm run build`, `npm link`, then in the app `npm link @tapwithus/tapsdk`.
+**Local SDK development only:** clone `tap-web-sdk`, `npm install` + `npm run build`, `npm link`, then in the app `npm link @tapwithus/tapsdk`.
 
 ## First win
 

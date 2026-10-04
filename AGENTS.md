@@ -21,18 +21,18 @@ Browser TypeScript/JavaScript SDK for Tap devices over **Web Bluetooth**. Same C
 |------|--------|
 | Package name | `@tapwithus/tapsdk` |
 | Repository | `TapWithUs/tap-web-sdk` |
-| npm | `npm install @tapwithus/tapsdk` ([npmjs.com/package/@tapwithus/tapsdk](https://www.npmjs.com/package/@tapwithus/tapsdk)) |
+| npm (app-builder first path) | `npm install @tapwithus/tapsdk` (latest **0.9.0**) — [npmjs.com/package/@tapwithus/tapsdk](https://www.npmjs.com/package/@tapwithus/tapsdk) |
 | Hardware (documented) | **Tap Strap** and **TapXR** only |
 | Tap Band | Waitlist only — https://www.tapwithus.com/tapband-waitlist/ — **not** an SDK first-run target |
 | XR gestures | Gesture subset of Band; **do not invent** missing-gesture lists — use enums in this package |
 
-### Install
+### Install (app builders)
 
 ```bash
 npm install @tapwithus/tapsdk
 ```
 
-Import from `@tapwithus/tapsdk`. Do **not** invent a different package name.
+Import from `@tapwithus/tapsdk`. Do **not** invent a different package name. Do **not** tell app builders to clone this repo as the primary install.
 
 For coding-agent skills in an app project:
 
@@ -40,7 +40,7 @@ For coding-agent skills in an app project:
 curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash
 ```
 
-For local SDK development (unreleased changes): clone this repo, `npm run build`, then `npm link` / `npm link @tapwithus/tapsdk`.
+**Local SDK development only** (unreleased changes to this repo): clone, `npm install` + `npm run build`, then `npm link` / `npm link @tapwithus/tapsdk`. That path is not the app-builder first win.
 
 ### Browsers and page origin
 

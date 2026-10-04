@@ -9,12 +9,13 @@ Browser Web Bluetooth SDK for Tap. Prefer repo guidance over invented APIs.
 
 ## Facts
 
-- **Not on npm** — clone [TapWithUs/tap-web-sdk](https://github.com/TapWithUs/tap-web-sdk), then `npm install` + `npm run build` (link or path-install into your app).
+- **Published on npm:** `npm install @tapwithus/tapsdk` (latest **0.9.0**). That is the app-builder first path.
+- **Clone + build + link** is only for unreleased local SDK development — not the default install for apps.
 - **Browsers:** Chrome, Edge, Opera only. Safari/Firefox unsupported. Page must be **HTTPS** or **localhost**.
 - **Connect:** `connect()` / `requestDevice()` needs a **user gesture** (e.g. button click).
 - **v1 taps:** call `setInputMode(new InputModeController())` after connect, or taps are **silent** (Text/HID mode).
 - **Hardware:** Tap Strap and TapXR only. Tap Band is waitlist — https://www.tapwithus.com/tapband-waitlist/ — not an SDK first-run target.
-- **Do not invent APIs**, BLE UUIDs, gesture lists, or payload shapes. Follow exports and types in this repo.
+- **Do not invent APIs**, BLE UUIDs, gesture lists, or payload shapes. Follow exports and types in this repo / the published package.
 
 ## Where to read next
 
