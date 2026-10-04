@@ -287,9 +287,9 @@ npm run test:watch
 
 ## Releasing
 
-This package uses npm Trusted Publishing (OIDC). A `v*` tag push stages `@tapwithus/tapsdk`. The version does not go live until a maintainer approves it with 2FA. The workflow does not use `NPM_TOKEN`.
+This package uses npm Trusted Publishing (OIDC). A `v*` tag push publishes `@tapwithus/tapsdk` to the public registry. The workflow does not use `NPM_TOKEN`.
 
-One-time setup (already done for `0.9.0`): on [the package settings](https://www.npmjs.com/package/@tapwithus/tapsdk) add a GitHub Actions trusted publisher for `TapWithUs/tap-web-sdk`, workflow filename `npm-publish.yml`, no environment. Leave **Allow npm publish** and **Allow npm dist-tag** unchecked. `npm stage publish` is always allowed.
+One-time setup: on [the package settings](https://www.npmjs.com/package/@tapwithus/tapsdk) the GitHub Actions trusted publisher for `TapWithUs/tap-web-sdk`, workflow filename `npm-publish.yml`, no environment, must have **Allow npm publish** checked. Leave **Allow npm dist-tag** unchecked. Edit the current publisher if it is still stage-only.
 
 1. Bump the version and push a tag:
 
@@ -298,16 +298,7 @@ npm version patch   # or minor / major
 git push origin master --follow-tags
 ```
 
-`npm version` updates `package.json` and creates a tag such as `v0.9.1`. The **Publish to npm** workflow then runs `npm stage publish`.
-
-2. Approve the staged version with 2FA:
-
-```bash
-npm stage list
-npm stage approve <stage-id> --otp=123456
-```
-
-Or open the package page → **Staged Packages** → **Approve**.
+`npm version` updates `package.json` and creates a tag such as `v0.9.1`. The **Publish to npm** workflow then runs `npm publish`. The version goes live when the job succeeds.
 
 ## License
 
