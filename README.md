@@ -287,27 +287,27 @@ npm run test:watch
 
 ## Releasing
 
-1. Bump the version and create a git tag:
+This package uses npm Trusted Publishing (OIDC). A `v*` tag push stages `@tapwithus/tapsdk`. The version does not go live until a maintainer approves it with 2FA. The workflow does not use `NPM_TOKEN`.
+
+One-time setup (already done for `0.9.0`): on [the package settings](https://www.npmjs.com/package/@tapwithus/tapsdk) add a GitHub Actions trusted publisher for `TapWithUs/tap-web-sdk`, workflow filename `npm-publish.yml`, no environment. Leave **Allow npm publish** and **Allow npm dist-tag** unchecked. `npm stage publish` is always allowed.
+
+1. Bump the version and push a tag:
 
 ```bash
 npm version patch   # or minor / major
 git push origin master --follow-tags
 ```
 
-`npm version` updates `package.json` and creates a tag such as `v0.9.1`.
+`npm version` updates `package.json` and creates a tag such as `v0.9.1`. The **Publish to npm** workflow then runs `npm stage publish`.
 
-2. Push the tag. The **Publish to npm** GitHub Actions workflow then publishes `@tapwithus/tapsdk` to the public npm registry.
-
-The workflow needs a repository secret named `NPM_TOKEN`. Create an npm Automation token for the `@tapwithus` organization with publish rights. Do not put the token in the repository.
-
-The first public release is `0.9.0`, the same version as [tap-python-sdk](https://pypi.org/project/tap-python-sdk/) on PyPI. After this change is on `master`:
+2. Approve the staged version with 2FA:
 
 ```bash
-git checkout master
-git pull
-git tag v0.9.0
-git push origin v0.9.0
+npm stage list
+npm stage approve <stage-id> --otp=123456
 ```
+
+Or open the package page → **Staged Packages** → **Approve**.
 
 ## License
 
