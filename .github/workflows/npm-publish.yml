@@ -10,6 +10,7 @@ env:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -22,8 +23,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '24.x'
-        cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
+
+    - name: Use npm with OIDC and stage support
+      run: npm install -g npm@latest
 
     - name: Check tag matches package.json version
       run: |
@@ -43,7 +46,5 @@ jobs:
     - name: Build
       run: npm run build
 
-    - name: Publish
-      run: npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    - name: Stage package
+      run: npm stage publish --access public
