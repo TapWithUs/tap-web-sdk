@@ -27,23 +27,21 @@ Use this skill when integrating **Tap** into a web app with the Web SDK.
 - How Tap works: https://dev.tapwithus.com/docs/how-tap-works/
 - Repo README and `AGENTS.md` (For app builders)
 
-## Install
+## Install package
 
 ```bash
 npm install @tapwithus/tapsdk
 ```
 
-Local SDK link (optional):
+## Install this skill (into an app repo)
 
 ```bash
-git clone https://github.com/TapWithUs/tap-web-sdk.git
-cd tap-web-sdk
-npm install
-npm run build
-npm link
-# in your app:
-npm link @tapwithus/tapsdk
+# From the app project root
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash
+# or: bash -s -- cursor | claude | all
 ```
+
+Local SDK link (optional): clone `tap-web-sdk`, `npm run build`, `npm link`, then in the app `npm link @tapwithus/tapsdk`.
 
 ## First win
 

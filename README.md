@@ -2,23 +2,15 @@
 
 TypeScript/JavaScript SDK for [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/) in the browser via [Web Bluetooth](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API).
 
-**Package name:** [`@tapwithus/tapsdk`](https://www.npmjs.com/package/@tapwithus/tapsdk) · **Repo:** [TapWithUs/tap-web-sdk](https://github.com/TapWithUs/tap-web-sdk)
+**Package:** [`@tapwithus/tapsdk`](https://www.npmjs.com/package/@tapwithus/tapsdk) · **Demo:** [tapwithus.github.io/tap-web-sdk](https://tapwithus.github.io/tap-web-sdk)
 
-#### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
+Docs: [Web SDK](https://dev.tapwithus.com/docs/web/) · [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/)
 
-Official docs: [Web SDK](https://dev.tapwithus.com/docs/web/) · [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/)
-
-**Hardware:** Tap Strap and TapXR are the documented first-run targets. [Tap Band](https://www.tapwithus.com/tapband-waitlist/) is on a waitlist — not an SDK first-run path. TapXR air gestures are a gesture subset of Band; do not invent missing-gesture lists.
+Supported hardware for this SDK: **Tap Strap** and **TapXR**. [Tap Band](https://www.tapwithus.com/tapband-waitlist/) is on a waitlist.
 
 ## Browser Support
 
-Web Bluetooth works in:
-
-- **Chrome** (Desktop & Android)
-- **Edge**
-- **Opera**
-
-Safari and Firefox are **not** supported. The page must be served over **HTTPS** or **localhost**. Pair/connect requires a user gesture that calls `navigator.bluetooth.requestDevice()` (for example a button click).
+Web Bluetooth works in **Chrome**, **Edge**, and **Opera**. Safari and Firefox are not supported. Serve the page over **HTTPS** or **localhost**. Call `connect()` from a user gesture (for example a button click).
 
 ## Installation
 
@@ -26,34 +18,9 @@ Safari and Firefox are **not** supported. The page must be served over **HTTPS**
 npm install @tapwithus/tapsdk
 ```
 
-The [GitHub Pages demo](https://tapwithus.github.io/tap-web-sdk) is unchanged. It loads the built bundle from this repository. It does not install the npm package.
-
-### Local development
-
-Clone the repository and build the SDK:
-
-```bash
-git clone https://github.com/TapWithUs/tap-web-sdk.git
-cd tap-web-sdk
-npm install
-npm run build
-```
-
-To link a local build into another project:
-
-```bash
-# In the tap-web-sdk directory
-npm link
-
-# In your project directory
-npm link @tapwithus/tapsdk
-```
-
 ## Quick Start
 
-**First win:** connect, then enable **Controller** on v1 so tap callbacks fire. Devices boot in Text / HID keyboard mode — Text is silent to the SDK (no tap events).
-
-Call `connect()` from a user gesture (button click). It opens the browser device picker via Web Bluetooth.
+Devices boot in Text / HID keyboard mode. For tap callbacks on v1, switch to **Controller** after connect. Call `connect()` from a user gesture.
 
 ```typescript
 import {
@@ -62,17 +29,14 @@ import {
     InputModeController,
 } from '@tapwithus/tapsdk';
 
-// Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
 // Must run from a user gesture (e.g. button onclick)
 const sdk = await connect();
 
 sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
 if (isTapSDKWeb2(sdk)) {
-    // v2 tap payload shape differs (list) — follow this callback signature
     sdk.registerTapEvents((id, data) => console.log('Tap', data[0]));
 } else {
-    // v1: Controller mode is required for tap callbacks
     sdk.registerTapEvents((id, tapcode) => console.log('Tap', tapcode));
     sdk.registerMouseEvents((id, vx, vy, proximity) => {
         console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
@@ -83,75 +47,47 @@ if (isTapSDKWeb2(sdk)) {
 await sdk.sendVibrationSequence([100, 200, 100]);
 ```
 
-> **Zero events?** On v1 you almost certainly stayed in Text mode. Call `await sdk.setInputMode(new InputModeController())` after connect. Wrong browser, missing HTTPS/localhost, or connecting without a user gesture also yield silence.
+If you get no events on v1, you are still in Text mode — call `await sdk.setInputMode(new InputModeController())`.
 
 ## AI-Assisted Development
 
-This repo ships app-builder guidance for coding agents (same idea as [Meta Wearables DAT AI-assisted development](https://wearables.developer.meta.com/docs/develop/dat/ai-assisted)): npm install path, Controller-mode first win, browser limits, and “do not invent APIs.”
+Use a coding agent with the `tap-sdk-web` skill. The skill holds SDK rules (install path, Controller mode, browsers, common mistakes). Your prompt only needs to describe the app.
 
-| Tool | Artifact | Setup |
-|------|----------|--------|
-| [Cursor](https://cursor.com/) | [`.cursor/skills/tap-sdk-web/SKILL.md`](.cursor/skills/tap-sdk-web/SKILL.md) | Copy into your app (see below) |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`.claude/skills/tap-sdk-web/SKILL.md`](.claude/skills/tap-sdk-web/SKILL.md) | Copy into your app (see below) |
-| AGENTS.md-compatible tools | [`AGENTS.md`](AGENTS.md) | Auto-read when this repo (or a copy of the file) is in the project |
+### Install the skill
 
-Portal docs for humans and agents: [Web SDK](https://dev.tapwithus.com/docs/web/) · [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/).
-
-### Install the skill in your app
-
-Skills live in this GitHub repo. After you clone `tap-web-sdk` (or download the skill files), copy the skill folder into the app you are building:
-
-**Cursor**
+From your app project root:
 
 ```bash
-# From your app root (create .cursor/skills if needed)
-mkdir -p .cursor/skills
-cp -R /path/to/tap-web-sdk/.cursor/skills/tap-sdk-web .cursor/skills/
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash
 ```
 
-**Claude Code**
+Or install for one tool:
 
 ```bash
-# From your app root (create .claude/skills if needed)
-mkdir -p .claude/skills
-cp -R /path/to/tap-web-sdk/.claude/skills/tap-sdk-web .claude/skills/
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash -s -- cursor
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash -s -- claude
 ```
 
-If you open `tap-web-sdk` itself in the agent, the skills and `AGENTS.md` are already present — no copy step.
+From a local clone of this repo:
+
+```bash
+./install-skills.sh all      # Cursor + Claude
+./install-skills.sh cursor
+./install-skills.sh claude
+```
+
+| Tool | Skill path |
+|------|------------|
+| [Cursor](https://cursor.com/) | `.cursor/skills/tap-sdk-web/` |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `.claude/skills/tap-sdk-web/` |
 
 ### Sample prompt
 
-Copy into Cursor, Claude Code, or another coding agent after the skill is installed (or with this repo open):
+After the skill is installed, describe the app:
 
 ```text
-You are helping me add Tap Strap / TapXR Web Bluetooth support with @tapwithus/tapsdk.
-
-Assume you know nothing about this project yet. Use these sources before choosing APIs or editing code:
-- Repo: https://github.com/TapWithUs/tap-web-sdk
-- Package: @tapwithus/tapsdk (npm install @tapwithus/tapsdk)
-- Skill: tap-sdk-web (Cursor: .cursor/skills/tap-sdk-web; Claude: .claude/skills/tap-sdk-web)
-- AGENTS.md "For app builders" in that repo
-- Portal: https://dev.tapwithus.com/docs/web/
-- Getting started: https://dev.tapwithus.com/docs/getting-started/
-- How Tap works: https://dev.tapwithus.com/docs/how-tap-works/
-
-Hard rules:
-- Browsers: Chrome, Edge, Opera only; HTTPS or localhost; Safari/Firefox unsupported
-- Call connect() from a user gesture (button click → requestDevice)
-- On v1, set InputModeController after connect — Text mode is silent to the SDK
-- Hardware first-run: Tap Strap and TapXR only; Tap Band is waitlist, not an SDK target
-- Do not invent APIs, BLE UUIDs, or gesture lists; follow exports and existing types (v2 tapcode may be a list)
-
-Inspect this repository, then add the smallest working slice: Connect button, connect(), registerTapEvents, Controller mode on v1, and log tapcodes. Call out verification steps (browser, HTTPS/localhost, user gesture).
+Build a small web page with @tapwithus/tapsdk: a Connect button that pairs a Tap Strap and logs each finger combination to the page.
 ```
-
-### What the skill covers
-
-- npm install `@tapwithus/tapsdk` (plus clone/link for local SDK work)
-- First-win Controller mode on v1
-- Browser matrix and user-gesture connect
-- Zero-events checklist
-- Band waitlist honesty; no invented APIs
 
 ## API Reference
 
@@ -360,17 +296,21 @@ npx http-server -p 8000
 ## Development
 
 ```bash
-# Install dependencies
+git clone https://github.com/TapWithUs/tap-web-sdk.git
+cd tap-web-sdk
 npm install
-
-# Build
 npm run build
-
-# Run tests
 npm test
+```
 
-# Watch mode for tests
-npm run test:watch
+To use a local build in another project:
+
+```bash
+# In tap-web-sdk
+npm link
+
+# In your app
+npm link @tapwithus/tapsdk
 ```
 
 ## License

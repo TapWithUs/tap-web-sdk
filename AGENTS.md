@@ -30,22 +30,15 @@ Browser TypeScript/JavaScript SDK for Tap devices over **Web Bluetooth**. Same C
 npm install @tapwithus/tapsdk
 ```
 
-For local SDK development (contribute to this repo or test unreleased changes):
+Import from `@tapwithus/tapsdk`. Do **not** invent a different package name.
+
+For coding-agent skills in an app project:
 
 ```bash
-git clone https://github.com/TapWithUs/tap-web-sdk.git
-cd tap-web-sdk
-npm install
-npm run build
-
-# In the tap-web-sdk directory
-npm link
-
-# In your app
-npm link @tapwithus/tapsdk
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-web-sdk/master/install-skills.sh | bash
 ```
 
-Import from `@tapwithus/tapsdk`. Do **not** invent a different package name (for example old `tap-sdk-web` registry installs).
+For local SDK development (unreleased changes): clone this repo, `npm run build`, then `npm link` / `npm link @tapwithus/tapsdk`.
 
 ### Browsers and page origin
 
