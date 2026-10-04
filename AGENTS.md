@@ -234,7 +234,7 @@ const RAW_SENSORS_CHARACTERISTIC = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 - **Raw sensors:** Developer mode in TapManager; NUS required; sensitivities match Python scale
 - **Air gestures:** TapXR; firmware-dependent; extended state needs Spatial Control firmware
 - **Input mode refresh:** every ~10s so the device does not fall back to Text (matches Python)
-- **npm publish:** Trusted Publishing via `v*` tags — see README **Releasing**; do not casually change `publishConfig` or package name
+- **npm publish:** Trusted Publishing via `v*` tags and `.github/workflows/npm-publish.yml`; do not casually change `publishConfig` or package name
 
 ### Don'ts (maintainers)
 
