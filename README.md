@@ -1,6 +1,6 @@
 # TapSDK Web
 
-A TypeScript/JavaScript SDK for communicating with [Tap Strap](https://www.tapwithus.com/) devices in the browser using Web Bluetooth.
+A TypeScript/JavaScript SDK for communicating with Tap devices in the browser using Web Bluetooth. It supports [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/) today. [TapBand](https://www.tapwithus.com/tapband-waitlist/) is upcoming (waitlist) and is not fully supported in this SDK yet.
 #### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
 
 ## Browser Support
@@ -132,7 +132,7 @@ The `agents` target does not replace `AGENTS.md` in this repository. That file a
 1. Make an empty folder for your project and open your coding agent in it.
 2. Install the skills (see above).
 3. Turn on your Tap and close Tap Manager. Use Chrome, Edge, or Opera. Open the page on localhost or HTTPS.
-4. Tell the agent which device you have (Tap Strap, Tap Strap 2, TapXR, or TapBand).
+4. Tell the agent which device you have (Tap Strap, Tap Strap 2, or TapXR). TapBand is upcoming (waitlist) and is not fully supported in this SDK yet.
 5. Ask it to connect first: *"Use the tap-getting-started skill. Add a Connect button, connect to my Tap, and show my taps."* Tap your fingers and tell the agent what you see.
 6. When taps arrive, describe your app. Build one interaction at a time and try each one with the device.
 7. If something does not work, tell the agent exactly what happened (for example "nothing prints when I tap" or "letters appear in the page"). It can use the troubleshooting table in `tap-getting-started`.
@@ -270,6 +270,8 @@ tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
 
 ### Air Gestures
 
+Air-gesture support depends on the device and firmware. TapXR does not expose the full gesture set. TapBand is planned to support a broader set when it ships. Treat the enums below as the protocol surface, not as a guarantee that every code arrives on every device.
+
 ```typescript
 import { AirGestures } from '@tapwithus/tapsdk';
 
@@ -304,7 +306,7 @@ The SDK includes a unified demo in [examples/index.html](./examples/index.html).
 ### Prerequisites
 
 - A Chromium-based browser (Chrome, Edge, or Opera)
-- A Tap Strap device
+- A Tap Strap or TapXR device (TapBand is upcoming)
 - HTTPS or localhost (required for Web Bluetooth)
 
 ### Steps to Run
