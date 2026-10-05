@@ -1,3 +1,95 @@
+# Tap Web SDK
+
+Connect order, every time: call `connect()` from a button click, then register callbacks, then enable input, then keep the page open. `connect()` starts notifications. There is no `start()`. `connect()` alone delivers no taps until you enable input.
+
+> Demo: https://tapwithus.github.io/tap-web-sdk/
+> Skills: https://github.com/TapWithUs/tap-web-sdk/tree/master/plugins/tap-web-sdk/skills
+> Package: `npm install @tapwithus/tapsdk` (Chrome, Edge, or Opera; the page must use HTTPS or localhost)
+
+BLE SDK for Tap Strap, Tap Strap 2, TapXR, and TapBand in the browser. It receives taps, air gestures, mouse / IMU motion, and raw sensor data, and sends haptics and mode commands.
+
+## Two protocols, one entry point
+
+`await connect()` opens the browser device picker, detects the firmware protocol, and returns:
+
+- `TapSDKWeb` (**v1**, classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`)
+- `TapSDKWeb2` (**v2**, framed firmware): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw
+
+Check with `isTapSDKWeb2(sdk)`. Write code that handles both unless the user names the device.
+
+## Required order
+
+```typescript
+import {
+    connect,
+    isTapSDKWeb2,
+    DeviceFeatures,
+    InputModeController,
+    ModelTypes,
+    VisionSensorOpModes,
+} from '@tapwithus/tapsdk';
+
+document.querySelector('#connect')!.addEventListener('click', async () => {
+    const sdk = await connect();
+    if (isTapSDKWeb2(sdk)) {
+        sdk.registerTapEvents((_id, tapcode) => console.log(tapcode[0]));
+        await sdk.setFeature(DeviceFeatures.MODEL_DETECTION, true);
+        await sdk.setVisionSensorModel(ModelTypes.TAPPING);
+        await sdk.setVisionSensorOpMode(VisionSensorOpModes.TRIGGER);
+    } else {
+        sdk.registerTapEvents((_id, tapcode) => console.log(tapcode));
+        await sdk.setInputMode(new InputModeController());
+    }
+});
+```
+
+## Callback signatures
+
+| Register | v1 `TapSDKWeb` | v2 `TapSDKWeb2` |
+|----------|----------------|-----------------|
+| `registerTapEvents` | `(id, tapcode: number)` | `(id, [tapcode])` |
+| `registerAirGestureEvents` | `(id, gesture: number)` -> `AirGestures` | `(id, [code])` -> `UnifiedAirGestures` |
+| `registerMouseEvents` | `(id, vx, vy, proximity)` | n/a |
+| `registerImuMotionDataEvents` | n/a | `(id, [dx, dy, isMouse, [roll, pitch, yaw]])` |
+| `registerRawDataEvents` | `(id, [{type, ts, payload}])` | same (alias of `registerRawImuDataEvents`) |
+| `registerAirGestureStateEvents` | `(id, MouseModes)` | n/a |
+| `registerStandbyStateEvents` | n/a | `(id, isStandby: boolean)` |
+| `registerConnectionEvents` | `(sdk)` | `(serial: string)` |
+| `registerDisconnectionEvents` | `(identifier)` | `(identifier)` |
+
+Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
+
+## Gotchas
+
+- Call `connect()` from a click handler. The browser blocks the device picker without a user gesture.
+- Use Chrome, Edge, or Opera. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
+- v1 boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
+- v2 sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
+- v2 runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
+- `connect()` already starts notifications. Register callbacks immediately after it returns, before you enable input.
+- Callbacks run on the Bluetooth notification path. Keep them short. Do not block. Start async work with `void sdk.sendVibrationSequence(...)`.
+- Haptics: `await sdk.sendVibrationSequence([onMs, offMs, ...])`, 10-2550 ms per value, max 18 values.
+- Do not invent APIs, UUIDs, or enum values. Check `src/enumerations.ts` and the README.
+- Update firmware with the Tap Manager app. Close Tap Manager before you connect. v1 raw sensors need Developer mode in Tap Manager.
+- Test with the real device and ask the user what they see. There is no simulator.
+
+## Skills
+
+| Skill | Use for |
+|-------|---------|
+| `tap-getting-started` | install, connect, quickstart page, troubleshooting |
+| `tap-tapping` | tapcodes, finger combos, double taps, shortcuts, haptics |
+| `tap-vision-models` | v2 model switching, `UnifiedAirGestures` (swipe, pinch, hold, fist) |
+| `tap-imu-motion` | pointer, tilt, roll / pitch / yaw, v1 mouse |
+| `tap-raw-sensors` | raw accelerometer / gyro, sensitivity, CSV logging |
+| `tap-knob` | v2 pinch-hold + twist to change a value |
+| `tap-dpad` | v2 swipes, pinch select, hold to rotate or drag |
+| `tap-build-an-app` | complete apps: one page, on-screen output, Web Audio |
+
+Skill files live in `plugins/tap-web-sdk/skills/<name>/SKILL.md` in the SDK repository.
+
+## Contributing to this repository
+
 # AGENTS.md - TapSDK Web
 
 ## Project Overview

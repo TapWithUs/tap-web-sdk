@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap raw CSV</title>
+</head>
+<body>
+    <p>Serve this repository after <code>npm run build</code>. Use Chrome, Edge, or Opera.</p>
+    <label>Seconds <input id="seconds" type="number" min="1" value="10"></label>
+    <button id="record" type="button">Record</button>
+    <pre id="log"></pre>
+    <script type="module">
+        import {
+            connect,
+            isTapSDKWeb2,
+            InputModeRaw,
+            DeviceFeatures,
+            ImuAcclSensitivity,
+            ImuGyroSensitivity,
+        } from '../../../../../dist/tap-web-sdk.bundle.js';
+
+        const logEl = document.querySelector('#log');
+
+        function log(line) {
+            logEl.textContent += line + '\n';
+        }
+
+        document.querySelector('#record').addEventListener('click', async () => {
+            const seconds = Number(document.querySelector('#seconds').value) || 10;
+            const rows = [];
+            try {
+                const sdk = await connect();
+                sdk.registerRawDataEvents((_id, packets) => {
+                    const now = Date.now() / 1000;
+                    for (const packet of packets) {
+                        rows.push([now, packet.ts, packet.type, ...packet.payload]);
+                    }
+                });
+
+                if (isTapSDKWeb2(sdk)) {
+                    await sdk.setFeature(DeviceFeatures.RAW_IMU_DATA, true);
+                    await sdk.setImuSensitivity(
+                        ImuAcclSensitivity.G2,
+                        ImuGyroSensitivity.DPS125,
+                        { scaled: true },
+                    );
+                } else {
+                    await sdk.setInputMode(new InputModeRaw({ scaled: true }));
+                }
+
+                log(`recording ${seconds}s ...`);
+                await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+                if (isTapSDKWeb2(sdk)) {
+                    await sdk.setFeature(DeviceFeatures.RAW_IMU_DATA, false);
+                }
+
+                const csv = rows.map((row) => row.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'raw.csv';
+                link.click();
+                URL.revokeObjectURL(url);
+                log(`wrote ${rows.length} packets to raw.csv`);
+            } catch (error) {
+                log(error instanceof Error ? error.message : String(error));
+            }
+        });
+    </script>
+</body>
+</html>
