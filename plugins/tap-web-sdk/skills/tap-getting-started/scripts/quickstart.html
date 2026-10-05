@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap quickstart</title>
+</head>
+<body>
+    <p>Serve this repository after <code>npm run build</code>. Use Chrome, Edge, or Opera.</p>
+    <button id="connect" type="button">Connect</button>
+    <label><input id="air" type="checkbox"> Air gestures (v2)</label>
+    <pre id="log"></pre>
+    <script type="module">
+        import {
+            connect,
+            isTapSDKWeb2,
+            InputModeController,
+            DeviceFeatures,
+            ModelTypes,
+            VisionSensorOpModes,
+        } from '../../../../../dist/tap-web-sdk.bundle.js';
+
+        const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+        const logEl = document.querySelector('#log');
+
+        function log(line) {
+            logEl.textContent += line + '\n';
+        }
+
+        function first(value) {
+            return Array.isArray(value) ? value[0] : value;
+        }
+
+        function fingers(tapcode) {
+            return FINGERS.filter((_, bit) => tapcode & (1 << bit));
+        }
+
+        document.querySelector('#connect').addEventListener('click', async () => {
+            const air = document.querySelector('#air').checked;
+            try {
+                const sdk = await connect();
+                sdk.registerTapEvents((_id, tapcode) => {
+                    const code = first(tapcode);
+                    log(`tap ${code} -> ${fingers(code).join('+')}`);
+                });
+                sdk.registerAirGestureEvents((_id, gesture) => {
+                    log(`air gesture ${first(gesture)}`);
+                });
+                sdk.registerDisconnectionEvents(() => log('disconnected'));
+                log(`connected, protocol ${isTapSDKWeb2(sdk) ? 'v2' : 'v1'}`);
+
+                if (isTapSDKWeb2(sdk)) {
+                    await sdk.setFeature(DeviceFeatures.MODEL_DETECTION, true);
+                    if (air) {
+                        await sdk.setVisionSensorModel(ModelTypes.AIR_GESTURE);
+                        await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
+                    } else {
+                        await sdk.setVisionSensorModel(ModelTypes.TAPPING);
+                        await sdk.setVisionSensorOpMode(VisionSensorOpModes.TRIGGER);
+                    }
+                } else {
+                    await sdk.setInputMode(new InputModeController());
+                }
+
+                await sdk.sendVibrationSequence([100, 100, 100]);
+                log('ready - tap your fingers');
+            } catch (error) {
+                log(error instanceof Error ? error.message : String(error));
+            }
+        });
+    </script>
+</body>
+</html>

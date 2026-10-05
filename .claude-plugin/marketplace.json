@@ -1,0 +1,17 @@
+{
+  "name": "tap-web-sdk-marketplace",
+  "owner": {
+    "name": "Tap Systems"
+  },
+  "plugins": [
+    {
+      "name": "tap-web-sdk",
+      "version": "1.0.0",
+      "description": "Skills for building browser apps with Tap Strap, TapXR, and TapBand: connect, taps, air gestures, vision models, IMU motion, raw sensors, and knob / D-Pad gesture recipes.",
+      "author": {
+        "name": "Tap Systems"
+      },
+      "source": "./plugins/tap-web-sdk"
+    }
+  ]
+}
