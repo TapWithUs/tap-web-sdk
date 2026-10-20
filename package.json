@@ -1,6 +1,6 @@
 {
   "name": "@tapwithus/tapsdk",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Web Bluetooth SDK for Tap Strap, TapXR, and TapBand (same BLE API; TapBand coming soon). Chrome or Edge; HTTPS or localhost.",
   "author": "Tap With Us",
   "license": "MIT",
