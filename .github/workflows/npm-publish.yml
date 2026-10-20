@@ -15,6 +15,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
     - uses: actions/checkout@v4
@@ -23,19 +26,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '24.x'
-        registry-url: 'https://registry.npmjs.org'
-        package-manager-cache: false
 
-    - name: Use npm with OIDC support
-      run: npm install -g npm@latest
-
-    - name: Strip dummy npm token so OIDC can run
-      run: |
-        npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-        if [ -f "$npmrc" ]; then
-          sed -i '/_authToken/d' "$npmrc"
-          sed -i '/always-auth/d' "$npmrc"
-        fi
+    - name: Use npm 11.5.1 for OIDC
+      run: npm install -g npm@11.5.1
 
     - name: Check tag matches package.json version
       run: |
@@ -45,6 +38,13 @@ jobs:
           echo "Tag v$TAG does not match package.json version $PKG"
           exit 1
         fi
+
+    - name: Show OIDC environment
+      run: |
+        echo "npm $(npm --version)"
+        echo "node $(node --version)"
+        echo "OIDC_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+set}"
+        echo "OIDC_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+set}"
 
     - name: Install dependencies
       run: npm ci
@@ -56,4 +56,4 @@ jobs:
       run: npm run build
 
     - name: Publish
-      run: unset NODE_AUTH_TOKEN && npm publish --access public
+      run: npm publish --access public --loglevel verbose
