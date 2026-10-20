@@ -390,7 +390,7 @@
         <div class="title-row">
             <div class="brand">
                 <h1>TapSDK Web</h1>
-                <p class="subtitle">Unified demo</p>
+                <p class="subtitle">Tap Strap and TapXR. TapBand: same BLE API, coming soon</p>
             </div>
             <div class="status-cluster">
                 <div id="status" class="status disconnected">Status: Disconnected</div>
@@ -399,11 +399,11 @@
         </div>
 
         <details class="warning">
-            <summary>Web Bluetooth needs HTTPS or localhost (Chrome, Edge, Opera)</summary>
+            <summary>Web Bluetooth needs a click, Chrome or Edge, and HTTPS or localhost</summary>
             <p>
-                Web Bluetooth requires a secure context (HTTPS) or localhost.
-                Works in Chromium-based browsers (Chrome, Edge, Opera).
-                <code>connect()</code> returns TapSDKWeb or TapSDKWeb2 after protocol detect.
+                Call <code>connect()</code> from a button click. Use Chrome or Edge.
+                The page must be HTTPS or localhost. Safari and Firefox do not support Web Bluetooth.
+                <code>connect()</code> returns TapSDKWeb or TapSDKWeb2 after firmware detect.
             </p>
         </details>
 
@@ -434,13 +434,13 @@
                 <div class="controls-body">
                     <div class="tab-scroll">
                     <p id="disconnectedHint" class="hint" style="margin-top:0;">
-                        Connect a Tap to load controls. Input Mode is for v1. Features, Vision, and IMU are for v2.
+                        Connect a Tap to load controls. Input Mode is for TapSDKWeb (classic firmware). Features, Vision, and IMU are for TapSDKWeb2 (framed firmware).
                     </p>
                     <p id="tabFallback" class="hint hidden" style="margin-top:0;">
                         This control group is not available for the connected protocol.
                     </p>
 
-                    <div id="v1Panel" class="hidden">
+                    <div id="classicPanel" class="hidden">
                         <div class="tab-panel is-active" data-tab="input" role="tabpanel">
                             <div class="control-group">
                                 <h2>Input Mode</h2>
@@ -462,7 +462,7 @@
                         </div>
                     </div>
 
-                    <div id="v2Panel" class="hidden">
+                    <div id="framedPanel" class="hidden">
                         <div class="tab-panel" data-tab="features" role="tabpanel">
                             <div class="control-group">
                                 <h2>Setup</h2>
@@ -621,8 +621,8 @@
         const statusEl = document.getElementById('status');
         const serialEl = document.getElementById('serial');
         const logEl = document.getElementById('log');
-        const v1Panel = document.getElementById('v1Panel');
-        const v2Panel = document.getElementById('v2Panel');
+        const classicPanel = document.getElementById('classicPanel');
+        const framedPanel = document.getElementById('framedPanel');
         const deviceInfoSection = document.getElementById('deviceInfoSection');
         const deviceInfoPre = document.getElementById('deviceInfoPre');
         const liveStats = document.getElementById('liveStats');
@@ -635,12 +635,12 @@
         const deviceInfoBtn = document.getElementById('deviceInfoBtn');
         const vibrateBtn = document.getElementById('vibrateBtn');
 
-        const v1Buttons = [
+        const classicButtons = [
             'textModeBtn', 'controllerModeBtn', 'controllerTextModeBtn', 'rawModeBtn',
             'autoTypeBtn', 'mouseTypeBtn', 'keyboardTypeBtn',
         ].map((id) => document.getElementById(id));
 
-        const v2Buttons = [
+        const framedButtons = [
             'setupBtn',
             'modelDetectionOnBtn', 'modelDetectionOffBtn', 'modelDetectionGetBtn',
             'imuMotionOnBtn', 'imuMotionOffBtn', 'imuMotionGetBtn',
@@ -685,7 +685,7 @@
             document.querySelectorAll('.tab-panel').forEach((panel) => {
                 panel.classList.toggle('is-active', panel.dataset.tab === tabId);
             });
-            const connected = !v1Panel.classList.contains('hidden') || !v2Panel.classList.contains('hidden');
+            const connected = !classicPanel.classList.contains('hidden') || !framedPanel.classList.contains('hidden');
             const activePanel = document.querySelector('.tab-panel.is-active');
             const available = !!(activePanel && !activePanel.closest('.hidden'));
             tabFallback.classList.toggle('hidden', !connected || available);
@@ -772,17 +772,17 @@
             deviceInfoBtn.disabled = !connected;
             vibrateBtn.disabled = !connected;
 
-            const isV1 = connected && protocol === 'v1';
-            const isV2 = connected && protocol === 'v2';
-            v1Panel.classList.toggle('hidden', !isV1);
-            v2Panel.classList.toggle('hidden', !isV2);
-            liveStats.classList.toggle('hidden', !isV2);
+            const isClassic = connected && protocol === 'TapSDKWeb';
+            const isFramed = connected && protocol === 'TapSDKWeb2';
+            classicPanel.classList.toggle('hidden', !isClassic);
+            framedPanel.classList.toggle('hidden', !isFramed);
+            liveStats.classList.toggle('hidden', !isFramed);
             disconnectedHint.classList.toggle('hidden', connected);
-            setPanelButtons(v1Buttons, isV1);
-            setPanelButtons(v2Buttons, isV2);
+            setPanelButtons(classicButtons, isClassic);
+            setPanelButtons(framedButtons, isFramed);
 
-            if (isV1) setActiveTab('input');
-            else if (isV2) setActiveTab('features');
+            if (isClassic) setActiveTab('input');
+            else if (isFramed) setActiveTab('features');
             else setActiveTab('input');
 
             if (!connected) {
@@ -803,10 +803,10 @@
             });
         }
 
-        function wireV1(current) {
+        function wireClassic(current) {
             current.registerConnectionEvents((s) => {
-                log(`Connected v1: ${s.identifier}`, 'info');
-                setConnected(true, 'v1');
+                log(`Connected TapSDKWeb: ${s.identifier}`, 'info');
+                setConnected(true, 'TapSDKWeb');
             });
             current.registerTapEvents((_id, tapcode) => {
                 const fingers = tapcode.toString(2).padStart(5, '0').split('').reverse()
@@ -831,14 +831,14 @@
             });
         }
 
-        function wireV2(current) {
+        function wireFramed(current) {
             current.registerConnectionEvents((serial) => {
-                log(`Connected v2: ${serial}`, 'info');
+                log(`Connected TapSDKWeb2: ${serial}`, 'info');
                 if (serial) {
                     serialEl.textContent = `Serial: ${serial}`;
                     serialEl.classList.remove('hidden');
                 }
-                setConnected(true, 'v2');
+                setConnected(true, 'TapSDKWeb2');
             });
             current.registerTapEvents((_id, data) => {
                 stats.taps += 1;
@@ -872,22 +872,22 @@
         }
 
         connectBtn.addEventListener('click', async () => {
-            log('Connecting (auto-detect protocol)...', 'info');
+            log('Connecting (detect firmware)...', 'info');
             try {
                 sdk = await connect();
                 wireCommon(sdk);
                 if (isTapSDKWeb2(sdk)) {
-                    wireV2(sdk);
+                    wireFramed(sdk);
                     if (sdk.serialNumber) {
                         serialEl.textContent = `Serial: ${sdk.serialNumber}`;
                         serialEl.classList.remove('hidden');
                     }
-                    setConnected(true, 'v2');
-                    log(`Protocol: v2 — ${sdk.identifier}`, 'info');
+                    setConnected(true, 'TapSDKWeb2');
+                    log(`TapSDKWeb2 — ${sdk.identifier}`, 'info');
                 } else {
-                    wireV1(sdk);
-                    setConnected(true, 'v1');
-                    log(`Protocol: v1 — ${sdk.identifier}`, 'info');
+                    wireClassic(sdk);
+                    setConnected(true, 'TapSDKWeb');
+                    log(`TapSDKWeb — ${sdk.identifier}`, 'info');
                 }
             } catch (err) {
                 log(`Connection error: ${err.message || err}`, 'error');
@@ -919,7 +919,7 @@
             log('Vibration sent', 'info');
         });
 
-        // v1 handlers
+        // TapSDKWeb handlers
         document.getElementById('textModeBtn').addEventListener('click', async () => {
             if (!sdk || isTapSDKWeb2(sdk)) return;
             await sdk.setInputMode(new InputModeText());
@@ -961,7 +961,7 @@
             log('Input type KEYBOARD', 'info');
         });
 
-        // v2 handlers
+        // TapSDKWeb2 handlers
         async function setDeviceFeature(feature, enable) {
             if (!sdk || !isTapSDKWeb2(sdk)) return;
             await sdk.setFeature(feature, enable);
@@ -1071,7 +1071,7 @@
 
         setInterval(updateStats, 250);
 
-        log('Ready. Click Connect — protocol auto-detects v1 or v2.', 'info');
+        log('Ready. Click Connect. Firmware detect returns TapSDKWeb or TapSDKWeb2.', 'info');
         setConnected(false);
     </script>
 </body>

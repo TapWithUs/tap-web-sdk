@@ -1,7 +1,7 @@
 {
   "name": "tap-web-sdk",
   "version": "1.0.0",
-  "description": "Skills for building browser apps with Tap Strap, TapXR, and TapBand: connect, taps, air gestures, vision models, IMU motion, raw sensors, and knob / D-Pad gesture recipes.",
+  "description": "Skills for building browser apps with Tap Strap and TapXR. TapBand uses the same BLE API and is coming soon. Connect, taps, raw air gestures, vision models, IMU motion, raw sensors, and knob / D-Pad recipes.",
   "author": {
     "name": "Tap Systems"
   },
@@ -9,6 +9,7 @@
   "keywords": [
     "tap",
     "tapxr",
+    "tapband",
     "tap-strap",
     "ble",
     "web-bluetooth",

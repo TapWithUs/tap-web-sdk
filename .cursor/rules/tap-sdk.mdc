@@ -8,10 +8,12 @@ alwaysApply: true
 When the user wants to build a Tap app, read the `tap-getting-started` skill. After `install-skills.sh cursor`, it is at `.cursor/skills/tap-getting-started/SKILL.md`. In this repository it is at `plugins/tap-web-sdk/skills/tap-getting-started/SKILL.md`.
 
 - Order: call `connect()` from a button click, then register callbacks, then enable input, then keep the page open. `connect()` starts notifications. There is no `start()`.
-- `connect()` returns `TapSDKWeb` (v1) or `TapSDKWeb2` (v2). Handle both unless the user names the device. Check with `isTapSDKWeb2`.
-- v1 needs `setInputMode(new InputModeController())` to get taps. v2 needs `setFeature(DeviceFeatures.MODEL_DETECTION, true)` plus a vision model.
-- v1 tapcode is `number`. v2 tapcode is `number[]`. Use the first element on v2.
-- Use Chrome, Edge, or Opera. The page must use HTTPS or localhost.
+- `connect()` returns `TapSDKWeb` (classic firmware) or `TapSDKWeb2` (framed firmware). Handle both unless the user names the device. Check with `isTapSDKWeb2`. Do not call these "SDK v1" or "SDK v2".
+- `TapSDKWeb` needs `setInputMode(new InputModeController())` to get taps. `TapSDKWeb2` needs `setFeature(DeviceFeatures.MODEL_DETECTION, true)` plus a vision model.
+- `TapSDKWeb` tapcode is `number`. `TapSDKWeb2` tapcode is `number[]`. Use the first element on `TapSDKWeb2`.
+- Raw air gestures: `registerAirGestureEvents`. `TapSDKWeb2` uses `UnifiedAirGestures` (swipes, pinches with hold, fist with hold). `TapSDKWeb` uses `AirGestures`. All Tap SDKs receive these raw codes. iOS and Android add a processed click/drag/drop layer; this SDK does not.
+- Devices: Tap Strap, Tap Strap 2, TapXR. TapBand uses the same BLE API and is coming soon (https://www.tapwithus.com/tapband-waitlist/). Never call TapBand unsupported, missing, or buyable. TapXR developer firmware has the full gesture set.
+- Use Chrome or Edge. The page must use HTTPS or localhost.
 - Callbacks run on the Bluetooth path. Keep them short. Do not block.
-- Knob and D-Pad recipes are v2 only (`tap-knob`, `tap-dpad`).
+- Knob and D-Pad recipes (`tap-knob`, `tap-dpad`) need `TapSDKWeb2` (framed firmware). They are app logic on raw events, not an SDK click/drag/drop layer.
 - Do not invent APIs or enum values. Test with the real device.

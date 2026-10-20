@@ -94,6 +94,7 @@ export class TapSDKWeb2 {
         return this.server?.connected ?? false;
     }
 
+    /** Firmware protocol label (`TapSDKWeb2`). Not a product SDK version. */
     get protocol(): 'v2' {
         return 'v2';
     }
@@ -106,6 +107,7 @@ export class TapSDKWeb2 {
         this.tapEventCb = cb;
     }
 
+    /** Raw air-gesture codes (`UnifiedAirGestures`). Use `data[0]` as the code. */
     registerAirGestureEvents(cb: AirGestureEventCallback): void {
         this.airGestureEventCb = cb;
     }
@@ -162,7 +164,7 @@ export class TapSDKWeb2 {
     async connect(): Promise<boolean> {
         if (!TapSDKWeb2.isSupported()) {
             throw new Error(
-                'Web Bluetooth is not available. Make sure you are using Chrome/Edge/Opera ' +
+                'Web Bluetooth is not available. Make sure you are using Chrome or Edge ' +
                 'and accessing the page via localhost or HTTPS.',
             );
         }

@@ -60,7 +60,7 @@ export class TapSDKWeb {
         return this.server?.connected ?? false;
     }
 
-    /** Protocol label for unified connect demos. */
+    /** Firmware protocol label (`TapSDKWeb`). Not a product SDK version. */
     get protocol(): 'v1' {
         return 'v1';
     }
@@ -73,6 +73,7 @@ export class TapSDKWeb {
         this.mouseEventCb = cb;
     }
 
+    /** Raw air-gesture codes (`AirGestures`). */
     registerAirGestureEvents(cb: AirGestureEventCallback): void {
         this.airGestureEventCb = cb;
     }
@@ -123,13 +124,13 @@ export class TapSDKWeb {
     }
 
     /**
-     * Connect to a Tap device using Web Bluetooth (v1 path).
-     * Prefer package-level connect() for auto protocol detect.
+     * Connect to a Tap device using Web Bluetooth (classic firmware).
+     * Prefer package-level connect() for auto firmware detect.
      */
     async connect(): Promise<boolean> {
         if (!TapSDKWeb.isSupported()) {
             throw new Error(
-                'Web Bluetooth is not available. Make sure you are using Chrome/Edge/Opera ' +
+                'Web Bluetooth is not available. Make sure you are using Chrome or Edge ' +
                 'and accessing the page via localhost or HTTPS.',
             );
         }

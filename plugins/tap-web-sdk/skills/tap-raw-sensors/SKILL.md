@@ -1,13 +1,13 @@
 ---
 name: tap-raw-sensors
-description: Stream raw accelerometer and gyroscope samples from a Tap (v1 raw mode or v2 RAW_IMU_DATA), set sensitivity and scaling, log to CSV, and plot. Use for raw sensors, raw IMU, accelerometer, gyro, data logging, datasets, custom gesture recognition, or research.
+description: Stream raw accelerometer and gyroscope samples from a Tap (TapSDKWeb raw mode or TapSDKWeb2 RAW_IMU_DATA), set sensitivity and scaling, log to CSV, and plot. Use for raw sensors, raw IMU, accelerometer, gyro, data logging, datasets, custom gesture recognition, or research.
 ---
 
 # Raw sensors
 
 For research, datasets, and custom gesture models. For pointer movement or orientation, prefer `tap-imu-motion` (less data, already processed).
 
-## Packet format (both protocols)
+## Packet format (both firmware classes)
 
 The callback gets a list of packets: `cb(identifier, packets)`.
 
@@ -19,7 +19,7 @@ The callback gets a list of packets: `cb(identifier, packets)`.
 
 Units: raw LSB counts, or **mdps** (gyro) and **mg** (accelerometer) when scaling is on. Rate is about 200 Hz per sensor, delivered in batches.
 
-## v2 (`TapSDKWeb2`)
+## `TapSDKWeb2`
 
 ```typescript
 import { DeviceFeatures, ImuAcclSensitivity, ImuGyroSensitivity } from '@tapwithus/tapsdk';
@@ -37,7 +37,7 @@ await sdk.setFeature(DeviceFeatures.RAW_IMU_DATA, false);
 
 `connect()` already started notifications. There is no `start()`. `await sdk.getImuSensitivity()` returns `[ImuGyroSensitivity, ImuAcclSensitivity]`.
 
-## v1 (`TapSDKWeb`)
+## `TapSDKWeb`
 
 ```typescript
 import { InputModeController, InputModeRaw } from '@tapwithus/tapsdk';
@@ -60,7 +60,7 @@ await sdk.setInputMode(new InputModeController());
 
 ## Log to CSV
 
-Open [scripts/log-csv.html](scripts/log-csv.html) from this repository with a local static server after `npm run build`. It works on v1 and v2. It records for the chosen number of seconds, then downloads a CSV file.
+Open [scripts/log-csv.html](scripts/log-csv.html) from this repository with a local static server after `npm run build`. It works on `TapSDKWeb` and `TapSDKWeb2`. It records for the chosen number of seconds, then downloads a CSV file.
 
 Columns: `host_time`, `device_ts_ms`, `type` (`imu` or `accl`), then the payload values.
 

@@ -52,6 +52,69 @@ describe('agent kit', () => {
     );
 });
 
+function collectMessagingFiles(dir: string): string[] {
+    const skip = new Set(['node_modules', 'dist', '.git']);
+    const out: string[] = [];
+    for (const name of readdirSync(dir)) {
+        if (skip.has(name) || name === 'package-lock.json') {
+            continue;
+        }
+        const path = resolve(dir, name);
+        const st = statSync(path);
+        if (st.isDirectory()) {
+            if (name === 'tests') {
+                continue;
+            }
+            out.push(...collectMessagingFiles(path));
+            continue;
+        }
+        if (/\.(md|mdc|html|json)$/.test(name) || name === 'package.json') {
+            out.push(path);
+        }
+    }
+    return out;
+}
+
+describe('product messaging', () => {
+    const files = collectMessagingFiles(ROOT);
+
+    it('does not describe TapXR as a gesture subset or TapBand as unsupported', () => {
+        for (const path of files) {
+            const text = readFileSync(path, 'utf8');
+            const rel = path.slice(ROOT.length + 1);
+            expect(text, rel).not.toMatch(/not fully supported/i);
+            expect(text, rel).not.toMatch(/TapXR does not expose/i);
+            for (const line of text.split('\n')) {
+                if (/subset of gestures/i.test(line)) {
+                    expect(line, rel).toMatch(/Do not say/i);
+                }
+                if (/SDK v1|SDK v2/.test(line)) {
+                    expect(line, rel).toMatch(/Do not call/i);
+                }
+                if (/\bunsupported\b/i.test(line)) {
+                    expect(line, rel).toMatch(/never|do not say/i);
+                }
+            }
+        }
+    });
+
+    it('describes TapBand as same API and coming soon', () => {
+        const readme = readFileSync(resolve(ROOT, 'README.md'), 'utf8');
+        const agents = readFileSync(resolve(ROOT, 'AGENTS.md'), 'utf8');
+        const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')) as {
+            description: string;
+            keywords: string[];
+        };
+        for (const text of [readme, agents, pkg.description]) {
+            expect(text).toMatch(/same BLE API/i);
+            expect(text).toMatch(/coming soon/i);
+            expect(text).toMatch(/waitlist|coming soon/i);
+        }
+        expect(pkg.keywords).toContain('tapband');
+        expect(pkg.keywords).toContain('gestures');
+    });
+});
+
 describe('KnobTracker', () => {
     it('counts steps, wraps roll, and releases', () => {
         const knob = new KnobTracker(2, 4);

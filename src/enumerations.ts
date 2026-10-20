@@ -13,6 +13,7 @@ export enum InputType {
     AUTO = 3,
 }
 
+/** Raw air-gesture codes on classic firmware (`TapSDKWeb`). */
 export enum AirGestures {
     NONE = 0,
     GENERAL = 1,
@@ -57,6 +58,12 @@ export enum ImuAcclSensitivity {
     G16 = 4,
 }
 
+/**
+ * Raw air-gesture codes on framed firmware (`TapSDKWeb2`).
+ * Full set on TapXR developer firmware and TapBand (same BLE API):
+ * thumb swipes, thumb-to-finger pinches with hold, fist with hold.
+ * Letters: A = thumb, B = index, C = middle, D = ring, E = pinky.
+ */
 export enum UnifiedAirGestures {
     COMBINED_GESTURE_NONE = 100,
     COMBINED_GESTURE_LEFT = 101,

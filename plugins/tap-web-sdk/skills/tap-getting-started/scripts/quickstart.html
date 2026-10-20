@@ -6,9 +6,9 @@
     <title>Tap quickstart</title>
 </head>
 <body>
-    <p>Serve this repository after <code>npm run build</code>. Use Chrome, Edge, or Opera.</p>
+    <p>Serve this repository after <code>npm run build</code>. Use Chrome or Edge. Click Connect.</p>
     <button id="connect" type="button">Connect</button>
-    <label><input id="air" type="checkbox"> Air gestures (v2)</label>
+    <label><input id="air" type="checkbox"> Air gestures</label>
     <pre id="log"></pre>
     <script type="module">
         import {
@@ -47,7 +47,7 @@
                     log(`air gesture ${first(gesture)}`);
                 });
                 sdk.registerDisconnectionEvents(() => log('disconnected'));
-                log(`connected, protocol ${isTapSDKWeb2(sdk) ? 'v2' : 'v1'}`);
+                log(`connected ${isTapSDKWeb2(sdk) ? 'TapSDKWeb2' : 'TapSDKWeb'}`);
 
                 if (isTapSDKWeb2(sdk)) {
                     await sdk.setFeature(DeviceFeatures.MODEL_DETECTION, true);

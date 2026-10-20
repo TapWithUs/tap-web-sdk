@@ -1,4 +1,4 @@
-/** Knob: hold a pinch and twist the hand to turn a value up or down (Tap v2). */
+/** Knob: hold a pinch and twist the hand to turn a value up or down (TapSDKWeb2 raw gestures). */
 
 const HOLD_CODES: Record<number, number> = { 110: 0, 111: 1, 112: 2, 113: 3 };
 const NONE_CODE = 100;

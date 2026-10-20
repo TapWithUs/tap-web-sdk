@@ -1,13 +1,13 @@
 ---
 name: tap-imu-motion
-description: Use Tap hand motion - v2 IMU motion data (dx, dy, roll, pitch, yaw) and v1 mouse events - to move a cursor, steer, tilt, or rotate things. Use for air mouse, pointer, cursor control, tilt, orientation, euler angles, roll/pitch/yaw, or motion-driven UI.
+description: Use Tap hand motion - TapSDKWeb2 IMU motion data (dx, dy, roll, pitch, yaw) and TapSDKWeb mouse events - to move a cursor, steer, tilt, or rotate things. Use for air mouse, pointer, cursor control, tilt, orientation, euler angles, roll/pitch/yaw, or motion-driven UI.
 ---
 
 # IMU motion and mouse
 
-The two protocols give motion in different ways. `connect()` already started notifications. There is no `start()`. Register callbacks, then enable the feature or the input mode.
+The two firmware classes give motion in different ways. `connect()` already started notifications. There is no `start()`. Register callbacks, then enable the feature or the input mode.
 
-## v2 (`TapSDKWeb2`): IMU motion feature
+## `TapSDKWeb2`: IMU motion feature
 
 ```typescript
 import { DeviceFeatures } from '@tapwithus/tapsdk';
@@ -27,7 +27,7 @@ await sdk.setFeature(DeviceFeatures.IMU_MOTION_DATA, true);
 - Turn off with `setFeature(DeviceFeatures.IMU_MOTION_DATA, false)` to save battery and bandwidth.
 - Motion works together with `MODEL_DETECTION` (air gestures). The `tap-knob` and `tap-dpad` skills combine them.
 
-## v1 (`TapSDKWeb`): mouse events
+## `TapSDKWeb`: mouse events
 
 ```typescript
 import { InputModeController, InputType } from '@tapwithus/tapsdk';
@@ -40,7 +40,7 @@ await sdk.setInputMode(new InputModeController());
 ```
 
 - `vx`, `vy`: signed velocities. `proximity`: `true` when a surface is detected (optical mouse on Tap Strap).
-- This callback does not include roll, pitch, or yaw. For orientation on v1, use raw IMU (`tap-raw-sensors`).
+- This callback does not include roll, pitch, or yaw. For orientation on `TapSDKWeb`, use raw IMU (`tap-raw-sensors`).
 - TapXR Spatial Control: `await sdk.setInputType(InputType.MOUSE)` forces air-mouse. `InputType.AUTO` returns to automatic.
 
 ## Patterns
@@ -59,7 +59,7 @@ function onMotion(_identifier: string, motion: ImuMotionData): void {
 }
 ```
 
-On v1, use `vx` and `vy` from `registerMouseEvents` the same way.
+On `TapSDKWeb`, use `vx` and `vy` from `registerMouseEvents` the same way.
 
 **Relative rotation (roll as a dial)**: store a reference roll when the user starts (for example on a pinch-hold), then use `roll - reference`. Do not use absolute roll. It depends on how the hand is held. See `tap-knob`.
 

@@ -4,18 +4,22 @@ Connect order, every time: call `connect()` from a button click, then register c
 
 > Demo: https://tapwithus.github.io/tap-web-sdk/
 > Skills: https://github.com/TapWithUs/tap-web-sdk/tree/master/plugins/tap-web-sdk/skills
-> Package: `npm install @tapwithus/tapsdk` (Chrome, Edge, or Opera; the page must use HTTPS or localhost)
+> Package: `npm install @tapwithus/tapsdk` (Chrome or Edge; the page must use HTTPS or localhost)
 
-BLE SDK for Tap Strap, Tap Strap 2, TapXR, and TapBand in the browser. It receives taps, air gestures, mouse / IMU motion, and raw sensor data, and sends haptics and mode commands.
+Web Bluetooth SDK for Tap Strap, Tap Strap 2, and TapXR. TapBand uses the **same BLE API** and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). It is not for sale yet. Never describe TapBand as unsupported, a missing target, or buyable.
 
-## Two protocols, one entry point
+The SDK receives taps, **raw** air gestures (thumb swipes, pinches with hold, fist with hold), mouse / IMU motion, and raw sensor data, and sends haptics and mode commands. Python, Web, iOS, and Android all receive these raw detections. Only iOS and Android add a processed click / drag / drop layer. Never say swipes or pinches are iOS/Android-only.
 
-`await connect()` opens the browser device picker, detects the firmware protocol, and returns:
+TapXR developer firmware supports the full gesture set (same as TapBand). Do not invent a firmware version number. Do not say TapXR supports a subset of gestures. Do not call the two firmware classes "SDK v1" or "SDK v2".
 
-- `TapSDKWeb` (**v1**, classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`)
-- `TapSDKWeb2` (**v2**, framed firmware): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw
+## Two firmware classes, one entry point
 
-Check with `isTapSDKWeb2(sdk)`. Write code that handles both unless the user names the device.
+`await connect()` opens the browser device picker, detects firmware, and returns:
+
+- `TapSDKWeb` (classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`) and `AirGestures`
+- `TapSDKWeb2` (framed firmware, TapXR developer firmware and TapBand): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw, and `UnifiedAirGestures`
+
+Check with `isTapSDKWeb2(sdk)`. Write code that handles both unless the user names the device. The `protocol` property is `'v1'` or `'v2'` as an internal firmware label, not a product SDK version.
 
 ## Required order
 
@@ -45,8 +49,8 @@ document.querySelector('#connect')!.addEventListener('click', async () => {
 
 ## Callback signatures
 
-| Register | v1 `TapSDKWeb` | v2 `TapSDKWeb2` |
-|----------|----------------|-----------------|
+| Register | `TapSDKWeb` | `TapSDKWeb2` |
+|----------|-------------|--------------|
 | `registerTapEvents` | `(id, tapcode: number)` | `(id, [tapcode])` |
 | `registerAirGestureEvents` | `(id, gesture: number)` -> `AirGestures` | `(id, [code])` -> `UnifiedAirGestures` |
 | `registerMouseEvents` | `(id, vx, vy, proximity)` | n/a |
@@ -62,15 +66,16 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 ## Gotchas
 
 - Call `connect()` from a click handler. The browser blocks the device picker without a user gesture.
-- Use Chrome, Edge, or Opera. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
-- v1 boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
-- v2 sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
-- v2 runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
+- Use Chrome or Edge. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
+- `TapSDKWeb` boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
+- `TapSDKWeb2` sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
+- `TapSDKWeb2` runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
+- Raw air gestures: `registerAirGestureEvents`. On `TapSDKWeb2`, `data[0]` is a `UnifiedAirGestures` code (swipes 101-104, pinches 105-108, holds 110-114, fist 109). Enable `AIR_GESTURE` + `STREAM`. On `TapSDKWeb`, the callback is a single `AirGestures` number in Controller mode.
 - `connect()` already starts notifications. Register callbacks immediately after it returns, before you enable input.
 - Callbacks run on the Bluetooth notification path. Keep them short. Do not block. Start async work with `void sdk.sendVibrationSequence(...)`.
 - Haptics: `await sdk.sendVibrationSequence([onMs, offMs, ...])`, 10-2550 ms per value, max 18 values.
 - Do not invent APIs, UUIDs, or enum values. Check `src/enumerations.ts` and the README.
-- Update firmware with the Tap Manager app. Close Tap Manager before you connect. v1 raw sensors need Developer mode in Tap Manager.
+- Update firmware with the Tap Manager app. Close Tap Manager before you connect. `TapSDKWeb` raw sensors need Developer mode in Tap Manager.
 - Test with the real device and ask the user what they see. There is no simulator.
 
 ## Skills
@@ -79,11 +84,11 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 |-------|---------|
 | `tap-getting-started` | install, connect, quickstart page, troubleshooting |
 | `tap-tapping` | tapcodes, finger combos, double taps, shortcuts, haptics |
-| `tap-vision-models` | v2 model switching, `UnifiedAirGestures` (swipe, pinch, hold, fist) |
-| `tap-imu-motion` | pointer, tilt, roll / pitch / yaw, v1 mouse |
+| `tap-vision-models` | vision model switching, raw `UnifiedAirGestures` (swipe, pinch, hold, fist) |
+| `tap-imu-motion` | pointer, tilt, roll / pitch / yaw, mouse events |
 | `tap-raw-sensors` | raw accelerometer / gyro, sensitivity, CSV logging |
-| `tap-knob` | v2 pinch-hold + twist to change a value |
-| `tap-dpad` | v2 swipes, pinch select, hold to rotate or drag |
+| `tap-knob` | app recipe: pinch-hold + twist to change a value |
+| `tap-dpad` | app recipe: swipes, pinch select, hold to rotate or drag |
 | `tap-build-an-app` | complete apps: one page, on-screen output, Web Audio |
 
 Skill files live in `plugins/tap-web-sdk/skills/<name>/SKILL.md` in the SDK repository.
@@ -228,7 +233,7 @@ const RAW_SENSORS_CHARACTERISTIC = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 ## Important Notes
 
 ### Web Bluetooth Limitations
-- Only works in Chrome, Edge, Opera (not Safari/Firefox)
+- Use Chrome or Edge (not Safari/Firefox)
 - Requires HTTPS or localhost
 - User must grant permission via browser dialog
 - Limited to one connection per page (typically)
@@ -239,9 +244,11 @@ const RAW_SENSORS_CHARACTERISTIC = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 - Sensitivity values must match Python SDK scale factors
 
 ### Air Gestures
-- TapXR only feature
-- Requires specific firmware version
-- Extended state events require Spatial Control firmware
+- This SDK delivers **raw** detections, same as Python / iOS / Android. iOS and Android add a processed click / drag / drop layer; this SDK does not.
+- `TapSDKWeb`: `registerAirGestureEvents` → `AirGestures`.
+- `TapSDKWeb2`: `registerAirGestureEvents` → `[UnifiedAirGestures]` after `MODEL_DETECTION` + `AIR_GESTURE` + `STREAM`.
+- TapXR developer firmware and TapBand share the same BLE API and the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). TapBand is coming soon (waitlist).
+- Do not invent a firmware version number.
 
 ### Input Mode Refresh
 - SDK automatically refreshes input mode every 10 seconds

@@ -1,4 +1,4 @@
-/** D-Pad: swipe, pinch, or hold a pinch to rotate or drag (Tap v2). */
+/** D-Pad: swipe, pinch, or hold a pinch to rotate or drag (TapSDKWeb2 raw gestures). */
 
 const NONE = 100;
 const LEFT = 101;

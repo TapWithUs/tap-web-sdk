@@ -5,10 +5,11 @@ export const NUS_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 export const V2_READ_CHAR = 'c3ff000e-1d8b-40fd-a56f-c7bd5d0f3370';
 export const V2_WRITE_CHAR = 'c3ff000f-1d8b-40fd-a56f-c7bd5d0f3370';
 
+/** Firmware protocol label: `'v1'` is TapSDKWeb, `'v2'` is TapSDKWeb2. Not a product SDK version. */
 export type TapProtocol = 'v1' | 'v2';
 
 /**
- * Return "v2" if framed-protocol read characteristic is present.
+ * Return "v2" (TapSDKWeb2) if the framed-firmware read characteristic is present.
  * Requires GATT services already discovered (after gatt.connect()).
  */
 export async function detectProtocol(server: BluetoothRemoteGATTServer): Promise<TapProtocol> {
