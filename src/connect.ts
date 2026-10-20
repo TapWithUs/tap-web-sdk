@@ -18,15 +18,16 @@ export interface ConnectOptions {
 function assertBluetoothSupported(): void {
     if (typeof navigator === 'undefined' || !('bluetooth' in navigator)) {
         throw new Error(
-            'Web Bluetooth is not available. Make sure you are using Chrome/Edge/Opera ' +
+            'Web Bluetooth is not available. Make sure you are using Chrome or Edge ' +
             'and accessing the page via localhost or HTTPS.',
         );
     }
 }
 
 /**
- * Request a Tap device, detect v1/v2 protocol, return matching SDK.
- * Does full GATT setup + notifications (web equivalent of Python connect + start).
+ * Open the browser device picker, detect firmware, and return TapSDKWeb or TapSDKWeb2.
+ * Call from a user click. Web Bluetooth needs Chrome or Edge, and HTTPS or localhost.
+ * Starts GATT notifications (web equivalent of Python connect + start).
  */
 export async function connect(options?: ConnectOptions): Promise<ConnectedTapSDK> {
     assertBluetoothSupported();

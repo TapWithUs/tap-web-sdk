@@ -1,16 +1,18 @@
 # TapSDK Web
 
-A TypeScript/JavaScript SDK for communicating with Tap devices in the browser using Web Bluetooth. It supports [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/) today. [TapBand](https://www.tapwithus.com/tapband-waitlist/) is upcoming (waitlist) and is not fully supported in this SDK yet.
+A TypeScript/JavaScript SDK for Tap devices in the browser, using Web Bluetooth. It works with [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/). [TapBand](https://www.tapwithus.com/tapband-waitlist/) uses the same BLE API and is coming soon (waitlist). It is not for sale yet.
+
+TapXR developer firmware supports the full gesture set: taps, thumb swipes up / down / left / right, thumb-to-finger pinches with hold, and fist with hold. This SDK delivers those **raw** detections (the same codes as the Python, iOS, and Android SDKs). iOS and Android also add a processed click / drag / drop layer. This Web SDK does not.
+
 #### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
 
 ## Browser Support
 
-This SDK uses the [Web Bluetooth API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) which is supported in:
-- **Chrome** (Desktop & Android)
-- **Edge**
-- **Opera**
+Call `connect()` from a **user click**. The browser blocks the Bluetooth device picker without a user gesture.
 
-> **Note:** Safari and Firefox do not support Web Bluetooth. The page must be served over HTTPS or localhost.
+This SDK uses the [Web Bluetooth API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API). Use **Chrome** or **Edge**. The page must use HTTPS or localhost.
+
+> Safari and Firefox do not support Web Bluetooth.
 
 ## Installation
 
@@ -43,30 +45,48 @@ npm link @tapwithus/tapsdk
 
 ## Quick Start
 
+`connect()` detects firmware and returns `TapSDKWeb` (classic) or `TapSDKWeb2` (framed). Handle both. Check with `isTapSDKWeb2(sdk)`.
+
 ```typescript
 import {
     connect,
     isTapSDKWeb2,
     InputModeController,
+    DeviceFeatures,
+    ModelTypes,
+    VisionSensorOpModes,
+    UnifiedAirGestures,
 } from '@tapwithus/tapsdk';
 
-// Auto-detects v1 / v2 and returns TapSDKWeb or TapSDKWeb2
-const sdk = await connect();
+document.querySelector('#connect')!.addEventListener('click', async () => {
+    const sdk = await connect();
 
-sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
+    sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
-if (isTapSDKWeb2(sdk)) {
-    sdk.registerTapEvents((id, data) => console.log('Tap', data[0]));
-} else {
-    sdk.registerTapEvents((id, tapcode) => console.log('Tap', tapcode));
-    sdk.registerMouseEvents((id, vx, vy, proximity) => {
-        console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
-    });
-    await sdk.setInputMode(new InputModeController());
-}
+    if (isTapSDKWeb2(sdk)) {
+        sdk.registerTapEvents((_id, tapcode) => console.log('Tap', tapcode[0]));
+        sdk.registerAirGestureEvents((_id, data) => {
+            const code = data[0];
+            if (code === UnifiedAirGestures.COMBINED_GESTURE_UP) {
+                console.log('swipe up');
+            }
+        });
+        await sdk.setFeature(DeviceFeatures.MODEL_DETECTION, true);
+        await sdk.setVisionSensorModel(ModelTypes.TAPPING);
+        await sdk.setVisionSensorOpMode(VisionSensorOpModes.TRIGGER);
+    } else {
+        sdk.registerTapEvents((_id, tapcode) => console.log('Tap', tapcode));
+        sdk.registerMouseEvents((_id, vx, vy, proximity) => {
+            console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
+        });
+        await sdk.setInputMode(new InputModeController());
+    }
 
-await sdk.sendVibrationSequence([100, 200, 100]);
+    await sdk.sendVibrationSequence([100, 200, 100]);
+});
 ```
+
+`connect()` starts notifications. There is no `start()`. Register callbacks, then enable input. Keep the page open.
 
 ## AI-assisted development
 
@@ -118,21 +138,21 @@ The `agents` target does not replace `AGENTS.md` in this repository. That file a
 
 ### What's included
 
-- **tap-getting-started**: install, connect to any Tap (v1 or v2), quickstart page, troubleshooting
+- **tap-getting-started**: install, connect to any Tap, quickstart page, troubleshooting
 - **tap-tapping**: which fingers tapped, finger combos, double taps, in-page actions, haptics
-- **tap-vision-models**: switch between the tapping and air-gesture models; swipes, pinches, holds, fist (v2)
-- **tap-imu-motion**: pointer movement, tilt, roll / pitch / yaw (v2) and mouse events (v1)
+- **tap-vision-models**: switch between the tapping and air-gesture models; raw swipes, pinches, holds, fist
+- **tap-imu-motion**: pointer movement, tilt, roll / pitch / yaw, and mouse events
 - **tap-raw-sensors**: raw accelerometer and gyro streams, sensitivity, CSV logging
-- **tap-knob**: hold a pinch and twist to turn a value up or down (v2)
-- **tap-dpad**: swipe for directions, pinch to select, hold to rotate or drag (v2)
+- **tap-knob**: hold a pinch and twist to turn a value up or down (app recipe on raw events)
+- **tap-dpad**: swipe for directions, pinch to select, hold to rotate or drag (app recipe on raw events)
 - **tap-build-an-app**: turn Tap events into one browser page
 
 ### Onboard your agent
 
 1. Make an empty folder for your project and open your coding agent in it.
 2. Install the skills (see above).
-3. Turn on your Tap and close Tap Manager. Use Chrome, Edge, or Opera. Open the page on localhost or HTTPS.
-4. Tell the agent which device you have (Tap Strap, Tap Strap 2, or TapXR). TapBand is upcoming (waitlist) and is not fully supported in this SDK yet.
+3. Turn on your Tap and close Tap Manager. Use Chrome or Edge. Open the page on localhost or HTTPS.
+4. Tell the agent which device you have (Tap Strap, Tap Strap 2, or TapXR). TapBand uses the same BLE API and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)).
 5. Ask it to connect first: *"Use the tap-getting-started skill. Add a Connect button, connect to my Tap, and show my taps."* Tap your fingers and tell the agent what you see.
 6. When taps arrive, describe your app. Build one interaction at a time and try each one with the device.
 7. If something does not work, tell the agent exactly what happened (for example "nothing prints when I tap" or "letters appear in the page"). It can use the troubleshooting table in `tap-getting-started`.
@@ -142,6 +162,7 @@ The `agents` target does not replace `AGENTS.md` in this repository. That file a
 - "Connect to my Tap and show which fingers I tap."
 - "Make a presentation clicker: index finger = next slide, middle finger = previous slide, buzz on each tap."
 - "Map my tap combos to buttons on this page."
+- "Show raw air gestures: swipes, pinches, and fist."
 - "Make a knob: hold a pinch and twist my wrist to change a value on the page."
 - "Build a D-Pad game: swipe to move, pinch to pick a shape, hold and twist to rotate it."
 - "Show a cursor on this page that follows my hand motion, and click with a pinch."
@@ -151,9 +172,11 @@ The `agents` target does not replace `AGENTS.md` in this repository. That file a
 
 ## API Reference
 
+`connect()` is the usual entry point. It returns `TapSDKWeb` or `TapSDKWeb2`. Use `isTapSDKWeb2(sdk)` to pick the right calls.
+
 ### TapSDKWeb
 
-The main class for interacting with Tap devices.
+Classic firmware. Input modes (`Text`, `Controller`, `ControllerText`, `Raw`).
 
 #### Static Methods
 
@@ -185,7 +208,7 @@ The main class for interacting with Tap devices.
 | `registerDisconnectionEvents(cb)` | `(identifier: string) => void` |
 | `registerTapEvents(cb)` | `(identifier: string, tapcode: number) => void` |
 | `registerMouseEvents(cb)` | `(identifier: string, vx: number, vy: number, proximity: boolean) => void` |
-| `registerAirGestureEvents(cb)` | `(identifier: string, gesture: number) => void` |
+| `registerAirGestureEvents(cb)` | `(identifier: string, gesture: number) => void` (`AirGestures`) |
 | `registerAirGestureStateEvents(cb)` | `(identifier: string, mouseMode: MouseModes) => void` |
 | `registerRawDataEvents(cb)` | `(identifier: string, packets: RawDataPacket[]) => void` |
 
@@ -198,7 +221,27 @@ The main class for interacting with Tap devices.
 | `setInputType(type)` | Set input type for TapXR (Auto, Mouse, Keyboard) |
 | `sendVibrationSequence(durations)` | Send haptic feedback (array of durations in ms) |
 
-### Input Modes
+### TapSDKWeb2
+
+Framed firmware (TapXR developer firmware and TapBand). Feature switches, vision models, IMU motion, and `UnifiedAirGestures`.
+
+| Method | Callback / notes |
+|--------|------------------|
+| `registerTapEvents(cb)` | `(identifier: string, tapcode: number[]) => void` — use `tapcode[0]` |
+| `registerAirGestureEvents(cb)` | `(identifier: string, data: number[]) => void` — `data[0]` is a `UnifiedAirGestures` code |
+| `registerImuMotionDataEvents(cb)` | `(identifier: string, [dx, dy, isMouse, [roll, pitch, yaw]]) => void` |
+| `registerRawImuDataEvents(cb)` | `(identifier: string, packets: RawDataMessage[]) => void` (`registerRawDataEvents` is an alias) |
+| `registerStandbyStateEvents(cb)` | `(identifier: string, isStandby: boolean) => void` |
+| `registerConnectionEvents(cb)` | `(serial: string) => void` |
+| `registerDisconnectionEvents(cb)` | `(identifier: string) => void` |
+| `setFeature(feature, enable)` | `DeviceFeatures.MODEL_DETECTION`, `IMU_MOTION_DATA`, `RAW_IMU_DATA`, … |
+| `setVisionSensorModel(model)` | `ModelTypes.TAPPING` or `ModelTypes.AIR_GESTURE` (one at a time) |
+| `setVisionSensorOpMode(mode)` | `TRIGGER` with tapping; `STREAM` with air gestures |
+| `sendVibrationSequence(durations)` | Same haptic API as `TapSDKWeb` |
+
+Nothing is sent until you enable the matching feature after you register callbacks.
+
+### Input Modes (`TapSDKWeb`)
 
 ```typescript
 import {
@@ -228,7 +271,7 @@ await tap.setInputMode(new InputModeRaw({
 }));
 ```
 
-### Input Types (TapXR)
+### Input Types (TapXR on `TapSDKWeb`)
 
 ```typescript
 import { InputType } from '@tapwithus/tapsdk';
@@ -250,46 +293,85 @@ Tap codes are 5-bit bitmaps representing which fingers tapped:
 | Ring   | 8 |
 | Pinky  | 16 |
 
-Example: `tapcode = 3` means Thumb + Index tapped together.
+Example: `tapcode = 3` means Thumb + Index tapped together. On `TapSDKWeb2`, the callback argument is `[tapcode]`.
 
-### Mouse Events & Orientation Data
-
-Mouse events include velocity, proximity, and device orientation (roll, pitch, yaw):
+### Mouse Events (`TapSDKWeb`)
 
 ```typescript
-tap.registerMouseEvents((identifier, vx, vy, proximity, roll, pitch, yaw) => {
+tap.registerMouseEvents((identifier, vx, vy, proximity) => {
     // vx, vy: Mouse velocity (signed integers)
-    // proximity: Boolean indicating if mouse is active
-    // roll, pitch, yaw: Orientation angles in degrees (signed integers)
+    // proximity: true when the mouse / surface is active
     console.log(`Velocity: (${vx}, ${vy}), Active: ${proximity}`);
-    console.log(`Orientation: roll=${roll}°, pitch=${pitch}°, yaw=${yaw}°`);
 });
 ```
 
-**Note:** Orientation data (roll/pitch/yaw) may be zero if not available on older firmware versions or if the data packet is shorter than 16 bytes.
+For roll / pitch / yaw, use `registerImuMotionDataEvents` on `TapSDKWeb2`.
 
-### Air Gestures
+### Air Gestures (raw detections)
 
-Air-gesture support depends on the device and firmware. TapXR does not expose the full gesture set. TapBand is planned to support a broader set when it ships. Treat the enums below as the protocol surface, not as a guarantee that every code arrives on every device.
+Python, Web, iOS, and Android all receive the same **raw** gesture detections from the sensor. This SDK exposes them on `registerAirGestureEvents`. iOS and Android add a processed click / drag / drop layer; this Web SDK does not. Swipes and pinches are not iOS/Android-only.
+
+On `TapSDKWeb2` (TapXR developer firmware and TapBand), enable the air-gesture vision model, then read `UnifiedAirGestures` from `data[0]`. Verified against `tapIncMsg` (`air_gesture` → `[code]`) and the enum in `src/enumerations.ts`.
+
+```typescript
+import {
+    DeviceFeatures,
+    ModelTypes,
+    UnifiedAirGestures,
+    VisionSensorOpModes,
+} from '@tapwithus/tapsdk';
+
+sdk.registerAirGestureEvents((_identifier, data) => {
+    switch (data[0]) {
+        case UnifiedAirGestures.COMBINED_GESTURE_UP:
+            console.log('thumb swipe up');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_DOWN:
+            console.log('thumb swipe down');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_LEFT:
+            console.log('thumb swipe left');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_RIGHT:
+            console.log('thumb swipe right');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_AB:
+            console.log('pinch thumb + index');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_AB_HOLD:
+            console.log('pinch hold');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_FIST:
+            console.log('fist');
+            break;
+        case UnifiedAirGestures.COMBINED_GESTURE_FIST_HOLD:
+            console.log('fist hold');
+            break;
+        default:
+            break;
+    }
+});
+
+await sdk.setFeature(DeviceFeatures.MODEL_DETECTION, true);
+await sdk.setVisionSensorModel(ModelTypes.AIR_GESTURE);
+await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
+```
+
+Letters in pinch names: A = thumb, B = index, C = middle, D = ring, E = pinky. `AC` / `AD` / `AE` and `*_HOLD` are the other pinches.
+
+On `TapSDKWeb` (classic firmware), Controller mode sends `AirGestures` as a single number (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, …):
 
 ```typescript
 import { AirGestures } from '@tapwithus/tapsdk';
 
-tap.registerAirGestureEvents((identifier, gesture) => {
-    switch (gesture) {
-        case AirGestures.GENERAL:
-            console.log('General gesture');
-            break;
-        case AirGestures.UP_ONE_FINGER:
-            console.log('Swipe up');
-            break;
-        case AirGestures.DOWN_ONE_FINGER:
-            console.log('Swipe down');
-            break;
-        // ... etc
+tap.registerAirGestureEvents((_identifier, gesture) => {
+    if (gesture === AirGestures.UP_ONE_FINGER) {
+        console.log('Swipe up');
     }
 });
 ```
+
+The device can repeat the same code in stream mode. Act when the code **changes**, or ignore repeats within about 40 ms. App recipes such as knob and D-Pad (see the skills) build click / drag / drop **in your page** from these raw codes. That is not an SDK layer.
 
 ### Haptic Feedback
 
@@ -305,8 +387,8 @@ The SDK includes a unified demo in [examples/index.html](./examples/index.html).
 
 ### Prerequisites
 
-- A Chromium-based browser (Chrome, Edge, or Opera)
-- A Tap Strap or TapXR device (TapBand is upcoming)
+- Chrome or Edge
+- A Tap Strap or TapXR (TapBand uses the same BLE API and is [coming soon](https://www.tapwithus.com/tapband-waitlist/))
 - HTTPS or localhost (required for Web Bluetooth)
 
 ### Steps to Run
@@ -339,18 +421,21 @@ npx http-server -p 8000
 
 4. **Test the SDK**:
 
-- Click "Connect to Tap" to open the browser's Bluetooth device picker
+- Click "Connect" to open the browser's Bluetooth device picker
 - Select your Tap device
-- Try different input modes (Controller Mode recommended for testing)
-- Tap your fingers to see events in the log
-- Test haptic feedback with the "Send Vibration" button
+- On `TapSDKWeb`, use Controller Mode to see tap and air-gesture events
+- On `TapSDKWeb2`, use Features / Vision to enable model detection and the air-gesture model
+- Tap your fingers and perform swipes, pinches, or a fist to see events in the log
+- Test haptic feedback with the "Vibrate" button
 
 ### Troubleshooting
 
-- **"Bluetooth not available"**: Make sure you're using Chrome, Edge, or Opera (not Safari/Firefox)
-- **"Connection failed"**: Ensure your Tap device is powered on and not connected to another device
+- **"Bluetooth not available"**: Use Chrome or Edge (not Safari or Firefox)
+- **"Connection failed"**: Ensure your Tap device is powered on and not connected to another device. Close Tap Manager.
 - **"HTTPS required"**: The example works on `localhost`, but if deploying, you need HTTPS
-- **No events appearing**: Try switching to Controller Mode - Text Mode may not generate tap events in the browser
+- **Device picker does not open**: Call `connect()` from a button click
+- **No events appearing (`TapSDKWeb`)**: Switch to Controller Mode. Text Mode may not generate tap events in the browser
+- **No events appearing (`TapSDKWeb2`)**: Enable `MODEL_DETECTION` and set a vision model
 
 ## Development
 

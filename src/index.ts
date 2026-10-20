@@ -1,5 +1,5 @@
-// TapSDK Web - Browser SDK for Tap Strap devices using Web Bluetooth
-// Chromium-only (Chrome, Edge, Opera)
+// TapSDK Web - Browser SDK for Tap devices using Web Bluetooth
+// Chrome or Edge; the page must use HTTPS or localhost.
 
 export { connect, isTapSDKWeb2 } from './connect';
 export type { ConnectedTapSDK, ConnectOptions } from './connect';

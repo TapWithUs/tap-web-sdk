@@ -42,7 +42,7 @@ export function tapDataMsg(data: DataView): number {
 
 /**
  * Parse mouse data message into (vx, vy, proximity).
- * When parseEulerAngles is true (v2 IMU motion), also return [roll, pitch, yaw].
+ * When parseEulerAngles is true (TapSDKWeb2 IMU motion), also return [roll, pitch, yaw].
  */
 export function mouseDataMsg(
     data: DataView,

@@ -1,11 +1,13 @@
 ---
 name: tap-knob
-description: Build a virtual knob with a Tap v2 - hold a pinch and twist the wrist to turn a value up or down (volume, brightness, zoom, scroll, color). Use for knob, dial, twist, rotate-to-adjust, slider, volume control, or continuous value control.
+description: Build a virtual knob with TapSDKWeb2 - hold a pinch and twist the wrist to turn a value up or down (volume, brightness, zoom, scroll, color). Use for knob, dial, twist, rotate-to-adjust, slider, volume control, or continuous value control.
 ---
 
 # Knob (pinch-hold + twist)
 
-**v2 (`TapSDKWeb2`) only.** It needs air-gesture holds and IMU roll, which v1 does not provide. This is the same interaction as the Knob in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
+**`TapSDKWeb2` only** (framed firmware: TapXR developer firmware and TapBand). It needs raw air-gesture holds and IMU roll. This is an **app recipe** on those raw events, not an SDK click/drag/drop layer. iOS and Android add that processed layer; this Web SDK does not.
+
+This is the same interaction as the Knob in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
 
 ## How it works
 
@@ -37,7 +39,7 @@ await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
 await sdk.setFeature(DeviceFeatures.IMU_MOTION_DATA, true);
 ```
 
-If `connect()` does not return a v2 SDK, tell the user the knob needs a v2 device.
+If `connect()` returns `TapSDKWeb` (classic firmware), tell the user this recipe needs framed firmware (`TapSDKWeb2`): TapXR developer firmware, or TapBand when it ships. Do not say the device is unsupported.
 
 Wiring:
 

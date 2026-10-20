@@ -1,11 +1,11 @@
 ---
 name: tap-tapping
-description: Decode Tap tapcodes (which fingers tapped), map finger combinations to in-page actions, and give haptic feedback. Use for tapping, finger combos, chords, tap-to-action, shortcuts, v1 input modes, or the v2 TAPPING model.
+description: Decode Tap tapcodes (which fingers tapped), map finger combinations to in-page actions, and give haptic feedback. Use for tapping, finger combos, chords, tap-to-action, shortcuts, InputModeController, or the TAPPING vision model.
 ---
 
 # Tapping
 
-Works on v1 and v2. Start from the `tap-getting-started` skill for connection.
+Works on `TapSDKWeb` and `TapSDKWeb2`. Start from the `tap-getting-started` skill for connection.
 
 ## Tapcode bitmask
 
@@ -51,12 +51,12 @@ Single-finger taps are the most reliable. Prefer them for frequent actions. Use 
 
 ## Turn on tap events
 
-- **v1**: `await sdk.setInputMode(new InputModeController())` after you register callbacks. `connect()` already started notifications. There is no `start()`.
+- **`TapSDKWeb`**: `await sdk.setInputMode(new InputModeController())` after you register callbacks. `connect()` already started notifications. There is no `start()`.
   - `new InputModeText()` (default): the Tap types letters into the focused field. The SDK gets no taps.
   - `new InputModeController()`: the SDK gets tap, mouse, and air-gesture events. No typing.
   - `new InputModeControllerText()`: both at the same time.
   - The SDK re-sends the mode every 10 s, so the device stays in it.
-- **v2**: `setFeature(DeviceFeatures.MODEL_DETECTION, true)`, `setVisionSensorModel(ModelTypes.TAPPING)`, `setVisionSensorOpMode(VisionSensorOpModes.TRIGGER)`.
+- **`TapSDKWeb2`**: `setFeature(DeviceFeatures.MODEL_DETECTION, true)`, `setVisionSensorModel(ModelTypes.TAPPING)`, `setVisionSensorOpMode(VisionSensorOpModes.TRIGGER)`.
 
 ## Double taps and multi-taps
 

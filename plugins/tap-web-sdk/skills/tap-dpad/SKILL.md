@@ -1,11 +1,13 @@
 ---
 name: tap-dpad
-description: Build a D-Pad style controller with a Tap v2 - swipes for directions, short pinches to select, pinch-hold that locks into rotate (twist) or drag (move) mode, fist-hold to hide. Use for D-Pad, menu navigation, select and move, drag and drop, rotate objects, or game controls with gestures.
+description: Build a D-Pad style controller with TapSDKWeb2 - swipes for directions, short pinches to select, pinch-hold that locks into rotate (twist) or drag (move) mode, fist-hold to hide. Use for D-Pad, menu navigation, select and move, drag and drop, rotate objects, or game controls with gestures.
 ---
 
 # D-Pad (swipe, pinch, hold to rotate or drag)
 
-**v2 (`TapSDKWeb2`) only.** It needs air gestures and IMU motion. This is the same interaction as the D-Pad page in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
+**`TapSDKWeb2` only** (framed firmware: TapXR developer firmware and TapBand). It needs raw air gestures and IMU motion. This is an **app recipe** that builds click / drag / drop in the page from those raw codes. iOS and Android add a processed layer in the native SDK; this Web SDK does not. Never say swipes or pinches are iOS/Android-only.
+
+This is the same interaction as the D-Pad page in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
 
 ## Interaction
 
@@ -50,7 +52,7 @@ await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
 await sdk.setFeature(DeviceFeatures.IMU_MOTION_DATA, true);
 ```
 
-If `connect()` does not return a v2 SDK, tell the user the D-Pad needs a v2 device.
+If `connect()` returns `TapSDKWeb` (classic firmware), tell the user this recipe needs framed firmware (`TapSDKWeb2`): TapXR developer firmware, or TapBand when it ships. Do not say the device is unsupported.
 
 ```typescript
 const dpad = new DpadStateMachine();
@@ -91,4 +93,4 @@ function onMotion(_identifier: string, motion: ImuMotionData): void {
 - Menu: swipes move focus in a grid, pinch AB = OK, pinch AC = back, fist = close.
 - Photo viewer: swipes = next / previous, hold + twist = rotate, hold + drag = pan.
 
-See also `tap-knob` (hold + twist for values) and `tap-vision-models` (all gesture codes).
+See also `tap-knob` (hold + twist for values) and `tap-vision-models` (gesture codes).

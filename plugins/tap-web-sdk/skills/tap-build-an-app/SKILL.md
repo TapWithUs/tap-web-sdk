@@ -9,14 +9,14 @@ The user may not be a developer. Keep the project small, explain how to run it i
 
 ## Workflow
 
-1. **Ask** (only what is missing): device (Tap Strap / Tap Strap 2 / TapXR / TapBand) and what the app should do.
+1. **Ask** (only what is missing): device (Tap Strap / Tap Strap 2 / TapXR) and what the app should do. TapBand uses the same BLE API and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). Never call it unsupported or buyable.
 2. **Connect first.** Use the `tap-getting-started` quickstart and confirm taps arrive before you build anything else.
 3. **Pick the input** (load the matching skill):
    - finger taps and combos: `tap-tapping`
-   - swipes, pinches, fist: `tap-vision-models` (v2)
+   - raw swipes, pinches, fist: `tap-vision-models`
    - pointer, tilt, rotation: `tap-imu-motion`
-   - twist-to-adjust value: `tap-knob` (v2)
-   - directions + select + drag/rotate: `tap-dpad` (v2)
+   - twist-to-adjust value: `tap-knob` (`TapSDKWeb2` app recipe)
+   - directions + select + drag/rotate: `tap-dpad` (`TapSDKWeb2` app recipe)
    - data recording: `tap-raw-sensors`
 4. **Put the output on the same page.**
 5. **Build one interaction, test it with the user, then add the next.**
@@ -72,6 +72,6 @@ The browser cannot press keys in other applications and cannot change the OS vol
 - Import `@tapwithus/tapsdk`. Do not copy SDK source into the app.
 - Add a keyboard fallback so the user can test the page without the Tap.
 - Show connection status on screen.
-- Use Chrome, Edge, or Opera. Serve the page on localhost or HTTPS.
+- Use Chrome or Edge. Serve the page on localhost or HTTPS.
 - Call `connect()` from a button click.
 - If the device does not connect, use the troubleshooting table in `tap-getting-started`.
