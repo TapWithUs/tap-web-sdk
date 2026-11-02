@@ -93,7 +93,7 @@ document.querySelector('#connect')!.addEventListener('click', async () => {
 After you disconnect, the Tap can stay connected to your computer, so it stops advertising and **does not appear in the `connect()` picker**. `connect()` therefore tries the Tap you last connected **in this page session** first, and opens the picker only when there is none or it does not answer within 3 s (`reuseTimeout`).
 
 - **Same page: works, no flag.** Connect, Disconnect, Connect again reconnects without the picker.
-- **After a page reload: not supported for a Tap that is still connected to the computer.** Chrome can list it through `getDevices()` (may need `chrome://flags/#enable-web-bluetooth-new-permissions-backend`), but connecting usually fails with "Bluetooth Device is no longer in range" because the Tap is not advertising. `connect()` does not try these devices automatically. Disconnect the Tap in system Bluetooth settings (or reset it) so it advertises, then pick it in the picker.
+- **After a page reload: not supported for a Tap that is still connected to the computer.** Chrome can list it through `getDevices()` (needs a flag: Chrome `chrome://flags/#enable-web-bluetooth-new-permissions-backend`, Edge `edge://flags/#enable-experimental-web-platform-features`), but connecting usually fails with "Bluetooth Device is no longer in range" because the Tap is not advertising. `connect()` does not try these devices automatically. Disconnect the Tap in system Bluetooth settings (or reset it) so it advertises, then pick it in the picker.
 
 ```typescript
 import { connect, connectToDevice, getPermittedDevices } from '@tapwithus/tapsdk';

@@ -67,6 +67,7 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 
 - Call `connect()` from a click handler. The browser blocks the device picker without a user gesture.
 - A Tap you disconnected from stays connected to the OS and does not advertise, so it is **missing from the picker**. In the same page, call `connect()` again: it reconnects the last Tap without the picker. `connect({ reuseKnownDevice: false })` always opens the picker (use it for a "Choose device" button). `connectToDevice(device)` and `getPermittedDevices()` connect and list specific devices.
+- `navigator.bluetooth.getDevices()` is missing unless a flag is on: Chrome `chrome://flags/#enable-web-bluetooth-new-permissions-backend`, Edge `edge://flags/#enable-experimental-web-platform-features` (then relaunch). Without it `getPermittedDevices()` returns only this session's Taps. Feature-detect, never require it, and tell the user which flag if the list is empty.
 - After a page reload, a Tap still connected to the OS cannot be reconnected from the page (`getDevices()` lists it, but connecting fails with "no longer in range"). Tell the user to disconnect the Tap in system Bluetooth settings or reset it, then use the picker. Do not build a reload-time Reconnect button.
 - Use Chrome or Edge. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
 - `TapSDKWeb` boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.

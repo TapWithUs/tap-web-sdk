@@ -129,6 +129,14 @@ describe('reconnect guidance', () => {
         }
     });
 
+    it('names the getDevices flags in the agent files', () => {
+        for (const rel of ['AGENTS.md', 'plugins/tap-web-sdk/skills/tap-getting-started/SKILL.md']) {
+            const text = readFileSync(resolve(ROOT, rel), 'utf8');
+            expect(text, rel).toContain('enable-web-bluetooth-new-permissions-backend');
+            expect(text, rel).toContain('enable-experimental-web-platform-features');
+        }
+    });
+
     it('exports the reconnect helpers', () => {
         const index = readFileSync(resolve(ROOT, 'src/index.ts'), 'utf8');
         expect(index).toContain('connectToDevice');

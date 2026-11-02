@@ -48,8 +48,9 @@ function rememberDevice(device: BluetoothDevice): void {
 
 /**
  * Known Tap devices, most recently used first: Taps connected earlier in this page session,
- * plus devices this origin was granted before (needs getDevices(), Chrome 85+, which may
- * require a flag). After a page reload, connecting to a granted Tap that is not advertising
+ * plus devices this origin was granted before (needs getDevices(), which is behind a flag:
+ * chrome://flags/#enable-web-bluetooth-new-permissions-backend, or
+ * edge://flags/#enable-experimental-web-platform-features). After a page reload, connecting to a granted Tap that is not advertising
  * (for example one still connected to the OS) often fails with "no longer in range".
  */
 export async function getPermittedDevices(): Promise<BluetoothDevice[]> {
