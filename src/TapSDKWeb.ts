@@ -29,6 +29,7 @@ export type DisconnectionEventCallback = (identifier: string) => void;
 
 export class TapSDKWeb {
     private device: BluetoothDevice | null = null;
+    private disconnectListener: (() => void) | null = null;
     private server: BluetoothRemoteGATTServer | null = null;
 
     private tapDataChar: BluetoothRemoteGATTCharacteristic | null = null;
@@ -109,9 +110,7 @@ export class TapSDKWeb {
     async connectToDevice(device: BluetoothDevice): Promise<boolean> {
         try {
             this.device = device;
-            this.device.addEventListener('gattserverdisconnected', () => {
-                this.onDisconnected();
-            });
+            this.attachDisconnectListener(device);
             return await this.connectGatt();
         } catch (error) {
             console.error('Failed to connect to device:', error);
@@ -140,9 +139,7 @@ export class TapSDKWeb {
             optionalServices: [NUS_SERVICE, DEVICE_INFORMATION_SERVICE, BATTERY_SERVICE],
         });
 
-        this.device.addEventListener('gattserverdisconnected', () => {
-            this.onDisconnected();
-        });
+        this.attachDisconnectListener(this.device);
 
         return await this.connectGatt();
     }
@@ -335,7 +332,22 @@ export class TapSDKWeb {
         }
     }
 
+    /** One listener per SDK instance, so a reused BluetoothDevice never calls stale instances. */
+    private attachDisconnectListener(device: BluetoothDevice): void {
+        this.detachDisconnectListener();
+        this.disconnectListener = () => this.onDisconnected();
+        device.addEventListener('gattserverdisconnected', this.disconnectListener);
+    }
+
+    private detachDisconnectListener(): void {
+        if (this.device && this.disconnectListener) {
+            this.device.removeEventListener('gattserverdisconnected', this.disconnectListener);
+        }
+        this.disconnectListener = null;
+    }
+
     private onDisconnected(): void {
+        this.detachDisconnectListener();
         this.stopInputModeRefresh();
         if (this.disconnectionCb) {
             this.disconnectionCb(this.identifier);

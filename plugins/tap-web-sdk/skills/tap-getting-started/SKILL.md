@@ -35,6 +35,7 @@ Browser notes:
 - Chrome or Edge. Safari and Firefox do not support Web Bluetooth.
 - The page must use HTTPS or localhost.
 - `connect()` calls `navigator.bluetooth.requestDevice()`. Call it from a button click. The browser blocks the device picker without a user gesture.
+- In the same page, `connect()` first reconnects the Tap you last connected (a disconnected Tap does not show in the picker). For an app with its own UI, add a "Choose device" button that calls `connect({ reuseKnownDevice: false })`. `connect({ device })` and `connectToDevice(device)` skip the picker for a specific `BluetoothDevice`.
 
 ## 3. Connect and listen
 
@@ -80,6 +81,7 @@ Check the class with `isTapSDKWeb2(sdk)`.
 |---------|-----|
 | Device picker does not open | Call `connect()` from a button click. Use Chrome or Edge on HTTPS or localhost. |
 | No device in the picker | Turn the Tap on. Close Tap Manager and other apps that hold the connection. Then retry. |
+| Paired Tap missing from the picker after disconnect | The Tap is still connected to the OS and does not advertise. In the same page, call `connect()` again: it reuses the last Tap of this session. After a reload this cannot work (`getDevices()` Taps fail with "no longer in range"): the user disconnects the Tap in system Bluetooth settings or resets it, then uses the picker. `connect({ reuseKnownDevice: false })` always opens the picker; `connectToDevice(device)` connects a specific one. |
 | User cancelled the picker | Catch the error and show it. Ask the user to click Connect again. |
 | Connected but no tap events (`TapSDKWeb`) | Call `setInputMode(new InputModeController())` after you register callbacks. |
 | Connected but no tap events (`TapSDKWeb2`) | Enable `MODEL_DETECTION` and set the `TAPPING` model with `TRIGGER` op mode. |

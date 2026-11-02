@@ -401,7 +401,7 @@
         <details class="warning">
             <summary>Web Bluetooth needs a click, Chrome or Edge, and HTTPS or localhost</summary>
             <p>
-                Call <code>connect()</code> from a button click. Use Chrome or Edge.
+                Call <code>connect()</code> from a button click. Use Chrome or Edge. Connect reconnects the Tap you last used in this page, else opens the picker. Choose device… always opens the picker.
                 The page must be HTTPS or localhost. Safari and Firefox do not support Web Bluetooth.
                 <code>connect()</code> returns TapSDKWeb or TapSDKWeb2 after firmware detect.
             </p>
@@ -412,6 +412,7 @@
                 <span class="connection-label">Connection</span>
                 <div class="controls">
                     <button id="connectBtn" class="btn-primary">Connect</button>
+                    <button id="chooseBtn" class="btn-accent" title="Always open the device picker">Choose device…</button>
                     <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
                     <button id="deviceInfoBtn" class="btn-accent" disabled>Device Info</button>
                     <button id="vibrateBtn" class="btn-success" disabled>Vibrate</button>
@@ -631,6 +632,7 @@
         const logFilters = document.querySelectorAll('.log-filter');
 
         const connectBtn = document.getElementById('connectBtn');
+        const chooseBtn = document.getElementById('chooseBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
         const deviceInfoBtn = document.getElementById('deviceInfoBtn');
         const vibrateBtn = document.getElementById('vibrateBtn');
@@ -768,6 +770,7 @@
                 ? `Status: Connected (${protocol})`
                 : 'Status: Disconnected';
             connectBtn.disabled = connected;
+            chooseBtn.disabled = connected;
             disconnectBtn.disabled = !connected;
             deviceInfoBtn.disabled = !connected;
             vibrateBtn.disabled = !connected;
@@ -800,7 +803,7 @@
                 log(`Disconnected: ${id}`, 'error');
                 sdk = null;
                 setConnected(false);
-            });
+                });
         }
 
         function wireClassic(current) {
@@ -871,10 +874,9 @@
             });
         }
 
-        connectBtn.addEventListener('click', async () => {
-            log('Connecting (detect firmware)...', 'info');
+        async function attach(connecting) {
             try {
-                sdk = await connect();
+                sdk = await connecting;
                 wireCommon(sdk);
                 if (isTapSDKWeb2(sdk)) {
                     wireFramed(sdk);
@@ -892,6 +894,17 @@
             } catch (err) {
                 log(`Connection error: ${err.message || err}`, 'error');
             }
+        }
+
+        // connect() reconnects the Tap last connected in this page session, else opens the picker.
+        connectBtn.addEventListener('click', () => {
+            log('Connecting (detect firmware)...', 'info');
+            attach(connect());
+        });
+
+        chooseBtn.addEventListener('click', () => {
+            log('Opening device picker...', 'info');
+            attach(connect({ reuseKnownDevice: false }));
         });
 
         disconnectBtn.addEventListener('click', () => {
@@ -1071,7 +1084,7 @@
 
         setInterval(updateStats, 250);
 
-        log('Ready. Click Connect. Firmware detect returns TapSDKWeb or TapSDKWeb2.', 'info');
+        log('Ready. Click Connect (reuses the last Tap) or Choose device…. Firmware detect returns TapSDKWeb or TapSDKWeb2.', 'info');
         setConnected(false);
     </script>
 </body>
