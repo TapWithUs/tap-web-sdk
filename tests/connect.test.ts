@@ -32,11 +32,12 @@ function stubBluetooth(bluetooth: Partial<Bluetooth>): void {
 function fakeDevice(
     connect: () => Promise<BluetoothRemoteGATTServer>,
     id = 'abc',
+    name = 'Tap_1',
 ): BluetoothDevice {
     const listeners = new Set<Listener>();
     return {
         id,
-        name: 'Tap_1',
+        name,
         gatt: { connected: false, connect, disconnect: vi.fn() },
         addEventListener: (_type: string, l: Listener) => listeners.add(l),
         removeEventListener: (_type: string, l: Listener) => listeners.delete(l),
@@ -66,10 +67,11 @@ describe('getPermittedDevices', () => {
         warn.mockRestore();
     });
 
-    it('returns the permitted devices without filtering them', async () => {
-        const device = fakeDevice(() => Promise.reject(new Error('unused')));
-        stubBluetooth({ getDevices: () => Promise.resolve([device]) });
-        expect(await getPermittedDevices()).toEqual([device]);
+    it('keeps only Tap devices from getDevices()', async () => {
+        const tap = fakeDevice(() => Promise.reject(new Error('unused')), 'tap', 'TapXR_29BB');
+        const other = fakeDevice(() => Promise.reject(new Error('unused')), 'kbd', 'Keyboard');
+        stubBluetooth({ getDevices: () => Promise.resolve([other, tap]) });
+        expect(await getPermittedDevices()).toEqual([tap]);
     });
 });
 
@@ -192,5 +194,47 @@ describe('getPermittedDevices with session memory', () => {
         stubBluetooth({});
         await connectToDevice(session);
         expect(await getPermittedDevices()).toEqual([session]);
+    });
+});
+
+describe('connectToDevice edge cases', () => {
+    it('disconnects a link that comes up after the timeout', async () => {
+        vi.useFakeTimers();
+        stubBluetooth({});
+        let resolveLate!: (server: BluetoothRemoteGATTServer) => void;
+        const server = { disconnect: vi.fn(), connected: true } as unknown as BluetoothRemoteGATTServer;
+        const device = fakeDevice(() => new Promise((resolve) => { resolveLate = resolve; }));
+        const result = connectToDevice(device, { connectTimeout: 500 });
+        const assertion = expect(result).rejects.toThrow(/Timed out/);
+        await vi.advanceTimersByTimeAsync(500);
+        await assertion;
+        resolveLate(server);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(server.disconnect).toHaveBeenCalled();
+    });
+
+    it('returns a TapSDKWeb2 for framed firmware', async () => {
+        const { detectProtocol } = await import('../src/detect');
+        vi.mocked(detectProtocol).mockResolvedValueOnce('v2');
+        stubBluetooth({});
+        const sdk = await connectToDevice(fakeDevice(okServer, 'framed'));
+        expect(mod.isTapSDKWeb2(sdk)).toBe(true);
+    });
+
+    it('caps reuseTimeout at 4 s so the picker can still open', async () => {
+        vi.useFakeTimers();
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        let hang = false;
+        const last = fakeDevice(() => (hang ? new Promise(() => {}) : okServer()), 'last');
+        const fresh = fakeDevice(okServer, 'fresh');
+        const requestDevice = vi.fn().mockResolvedValueOnce(last).mockResolvedValueOnce(fresh);
+        stubBluetooth({ requestDevice });
+        await connect();
+        hang = true;
+        const result = connect({ reuseTimeout: 9000 });
+        await vi.advanceTimersByTimeAsync(4000);
+        await result;
+        expect(requestDevice).toHaveBeenCalledTimes(2);
+        warn.mockRestore();
     });
 });

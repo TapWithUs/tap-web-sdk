@@ -141,7 +141,7 @@ export class TapSDKWeb2 {
         try {
             if ('getDevices' in navigator.bluetooth) {
                 const devices = await navigator.bluetooth.getDevices();
-                return devices.filter((d) => d.name?.toLowerCase().includes('tap') || d.id);
+                return devices.filter((d) => d.name?.toLowerCase().includes('tap') === true);
             }
         } catch (error) {
             console.warn('getDevices not supported:', error);
@@ -155,6 +155,7 @@ export class TapSDKWeb2 {
             this.attachDisconnectListener(device);
             return await this.connectGatt();
         } catch (error) {
+            this.detachDisconnectListener();
             console.error('Failed to connect to device:', error);
             return false;
         }

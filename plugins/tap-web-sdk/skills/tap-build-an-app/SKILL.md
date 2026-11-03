@@ -75,5 +75,5 @@ The browser cannot press keys in other applications and cannot change the OS vol
 - Use Chrome or Edge. Serve the page on localhost or HTTPS.
 - Call `connect()` from a button click.
 - Offer **Connect** (`connect()`, which reuses the last Tap of the session) and **Choose device…** (`connect({ reuseKnownDevice: false })`, always the picker). After a page reload a Tap still held by the OS cannot be reconnected from the page, so do not build a reload-time Reconnect button. Tell the user to disconnect the Tap in system Bluetooth settings, then use the picker.
-- If you list `getPermittedDevices()`, feature-detect it. `getDevices()` needs a flag: Chrome `chrome://flags/#enable-web-bluetooth-new-permissions-backend`, Edge `edge://flags/#enable-experimental-web-platform-features`. Without it only this session's Taps are listed.
+- If you list `getPermittedDevices()`, feature-detect it. `getDevices()` needs a flag: Chrome `chrome://flags/#enable-experimental-web-platform-features`, Edge `edge://flags/#enable-experimental-web-platform-features`. Without it only this session's Taps are listed.
 - If the device does not connect, use the troubleshooting table in `tap-getting-started`.

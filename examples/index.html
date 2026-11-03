@@ -874,7 +874,13 @@
             });
         }
 
+        function setConnecting(busy) {
+            connectBtn.disabled = busy;
+            chooseBtn.disabled = busy;
+        }
+
         async function attach(connecting) {
+            setConnecting(true);
             try {
                 sdk = await connecting;
                 wireCommon(sdk);
@@ -892,6 +898,7 @@
                     log(`TapSDKWeb — ${sdk.identifier}`, 'info');
                 }
             } catch (err) {
+                setConnecting(false);
                 log(`Connection error: ${err.message || err}`, 'error');
             }
         }

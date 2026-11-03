@@ -10,6 +10,9 @@ import { detectProtocol, NUS_SERVICE, TAP_SERVICE } from './detect';
 
 export type ConnectedTapSDK = TapSDKWeb | TapSDKWeb2;
 
+/** Chrome only allows the picker within about 5 s of a click, so the reuse wait is capped. */
+const MAX_REUSE_TIMEOUT_MS = 4000;
+
 export interface ConnectOptions {
     keepaliveTimeout?: number;
     getTimeout?: number;
@@ -22,7 +25,7 @@ export interface ConnectOptions {
      * page session before opening the picker. Set false to always open the picker, e.g. to add another Tap.
      */
     reuseKnownDevice?: boolean;
-    /** connect() only: ms to wait on the known device before opening the picker (default 3000). */
+    /** connect() only: ms to wait on the known device before opening the picker (default 3000, max 4000). */
     reuseTimeout?: number;
 }
 
@@ -48,11 +51,15 @@ function rememberDevice(device: BluetoothDevice): void {
 
 /**
  * Known Tap devices, most recently used first: Taps connected earlier in this page session,
- * plus devices this origin was granted before (needs getDevices(), which is behind a flag:
- * chrome://flags/#enable-web-bluetooth-new-permissions-backend, or
- * edge://flags/#enable-experimental-web-platform-features). After a page reload, connecting to a granted Tap that is not advertising
- * (for example one still connected to the OS) often fails with "no longer in range".
+ * plus Taps this origin was granted before. The second part needs navigator.bluetooth.getDevices(),
+ * which is behind the flag chrome://flags/#enable-experimental-web-platform-features (Chrome) or
+ * edge://flags/#enable-experimental-web-platform-features (Edge). After a page reload, connecting
+ * to a granted Tap that is not advertising often fails with "no longer in range".
  */
+function isTapName(device: BluetoothDevice): boolean {
+    return device.name?.toLowerCase().includes('tap') === true;
+}
+
 export async function getPermittedDevices(): Promise<BluetoothDevice[]> {
     const devices = [...sessionDevices];
     if (
@@ -62,7 +69,7 @@ export async function getPermittedDevices(): Promise<BluetoothDevice[]> {
     ) {
         try {
             for (const device of await navigator.bluetooth.getDevices()) {
-                if (!devices.some((d) => d.id === device.id)) {
+                if (isTapName(device) && !devices.some((d) => d.id === device.id)) {
                     devices.push(device);
                 }
             }
@@ -81,9 +88,21 @@ async function gattConnectWithTimeout(
         throw new Error('Device has no GATT server');
     }
     const gatt = device.gatt;
+    let timedOut = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const connecting = gatt.connect();
+    // A link that comes up after we gave up would hold the Tap with no SDK attached. Drop it.
+    connecting.then(
+        (server) => {
+            if (timedOut) {
+                server.disconnect();
+            }
+        },
+        () => {},
+    );
     const timeout = new Promise<never>((_, reject) => {
         timer = setTimeout(() => {
+            timedOut = true;
             if (!gatt.connected) {
                 gatt.disconnect();
             }
@@ -94,7 +113,7 @@ async function gattConnectWithTimeout(
         }, timeoutMs);
     });
     try {
-        return await Promise.race([gatt.connect(), timeout]);
+        return await Promise.race([connecting, timeout]);
     } finally {
         clearTimeout(timer);
     }
@@ -177,7 +196,10 @@ export async function connect(options?: ConnectOptions): Promise<ConnectedTapSDK
             try {
                 return await connectToDevice(known, {
                     ...options,
-                    connectTimeout: options?.reuseTimeout ?? DEFAULT_REUSE_TIMEOUT_MS,
+                    connectTimeout: Math.min(
+                        options?.reuseTimeout ?? DEFAULT_REUSE_TIMEOUT_MS,
+                        MAX_REUSE_TIMEOUT_MS,
+                    ),
                 });
             } catch (error) {
                 console.warn('Could not reuse the known Tap, opening the picker:', error);
