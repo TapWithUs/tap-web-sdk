@@ -37,6 +37,10 @@ Browser notes:
 - `connect()` calls `navigator.bluetooth.requestDevice()`. Call it from a button click. The browser blocks the device picker without a user gesture.
 - In the same page, `connect()` first reconnects the Tap you last connected (a disconnected Tap does not show in the picker). For an app with its own UI, add a "Choose device" button that calls `connect({ reuseKnownDevice: false })`. `connect({ device })` and `connectToDevice(device)` skip the picker for a specific `BluetoothDevice`.
 
+### Reconnect in your own app
+
+Copy the Connect and Choose device pattern from `tap-build-an-app` ("Connect button and reconnect"). In short: disable both buttons while `connect()` runs, re-enable them on error and on disconnect, and do not add a reload-time Reconnect button.
+
 ## 3. Connect and listen
 
 Open [scripts/quickstart.html](scripts/quickstart.html) from this repository with a local static server after `npm run build`. In an app, use the same order with `import { ... } from '@tapwithus/tapsdk'`.

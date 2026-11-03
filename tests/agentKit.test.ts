@@ -137,6 +137,12 @@ describe('reconnect guidance', () => {
         }
     });
 
+    it('keeps the reconnect pattern in the build-an-app skill', () => {
+        const text = readFileSync(resolve(ROOT, 'plugins/tap-web-sdk/skills/tap-build-an-app/SKILL.md'), 'utf8');
+        expect(text).toContain('## Connect button and reconnect');
+        expect(text).toContain('reuseKnownDevice: false');
+    });
+
     it('exports the reconnect helpers', () => {
         const index = readFileSync(resolve(ROOT, 'src/index.ts'), 'utf8');
         expect(index).toContain('connectToDevice');

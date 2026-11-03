@@ -66,6 +66,52 @@ If a callback must not draw, push the event onto an array and read that array fr
 
 The browser cannot press keys in other applications and cannot change the OS volume. Keep the interaction inside the page.
 
+## Connect button and reconnect
+
+Use this pattern when the app has its own buttons. It is the reconnect flow the SDK expects: the same page reuses the last Tap without the picker, and "Choose device" always shows the picker.
+
+```typescript
+import { connect, getPermittedDevices, isTapSDKWeb2, type ConnectedTapSDK } from '@tapwithus/tapsdk';
+
+const connectBtn = document.querySelector<HTMLButtonElement>('#connect')!;
+const chooseBtn = document.querySelector<HTMLButtonElement>('#choose')!;
+const statusEl = document.querySelector<HTMLElement>('#status')!;
+let sdk: ConnectedTapSDK | null = null;
+
+function setBusy(busy: boolean): void {
+    connectBtn.disabled = busy;
+    chooseBtn.disabled = busy;
+}
+
+async function attach(pending: Promise<ConnectedTapSDK>): Promise<void> {
+    setBusy(true); // one connection at a time; a second click would start a second connect()
+    try {
+        sdk = await pending;
+        // Register callbacks, then enable input (see the required order above).
+        statusEl.textContent = isTapSDKWeb2(sdk) ? 'Connected (framed firmware)' : 'Connected (classic firmware)';
+    } catch (err) {
+        statusEl.textContent = `Connection failed: ${(err as Error).message}`;
+        setBusy(false);
+    }
+}
+
+// Connect: reuses the Tap connected earlier in this page (about 3 s), else opens the picker.
+connectBtn.addEventListener('click', () => void attach(connect()));
+
+// Choose device: always opens the picker, for adding or switching Taps.
+chooseBtn.addEventListener('click', () => void attach(connect({ reuseKnownDevice: false })));
+
+// Optional: list devices the page was granted. Empty unless getDevices() is enabled (see flags).
+const granted = await getPermittedDevices();
+```
+
+Notes:
+
+- `connect()` does not tell you whether it reused the Tap or opened the picker. If the picker opens after Connect, that is expected: the last Tap did not answer.
+- After a page reload, do not show a Reconnect button for granted Taps. Connecting fails with "no longer in range" while the Tap is still held by the OS. Tell the user to disconnect the Tap in system Bluetooth settings, then click Choose device.
+- Call `setBusy(false)` again on disconnect, as well as on error.
+
+
 ## Rules
 
 - Do not add dependencies to the SDK. Add them to the app's `package.json`.
