@@ -115,6 +115,41 @@ describe('product messaging', () => {
     });
 });
 
+describe('reconnect guidance', () => {
+    const docs = [
+        'AGENTS.md',
+        'README.md',
+        'plugins/tap-web-sdk/skills/tap-getting-started/SKILL.md',
+        'plugins/tap-web-sdk/skills/tap-build-an-app/SKILL.md',
+    ];
+
+    it('documents reuseKnownDevice so docs match the API', () => {
+        for (const rel of docs) {
+            expect(readFileSync(resolve(ROOT, rel), 'utf8'), rel).toContain('reuseKnownDevice');
+        }
+    });
+
+    it('names the getDevices flag in the agent files', () => {
+        for (const rel of ['AGENTS.md', 'plugins/tap-web-sdk/skills/tap-getting-started/SKILL.md']) {
+            const text = readFileSync(resolve(ROOT, rel), 'utf8');
+            expect(text, rel).toContain('enable-experimental-web-platform-features');
+            expect(text, rel).not.toContain('enable-web-bluetooth-new-permissions-backend');
+        }
+    });
+
+    it('keeps the reconnect pattern in the build-an-app skill', () => {
+        const text = readFileSync(resolve(ROOT, 'plugins/tap-web-sdk/skills/tap-build-an-app/SKILL.md'), 'utf8');
+        expect(text).toContain('## Connect button and reconnect');
+        expect(text).toContain('reuseKnownDevice: false');
+    });
+
+    it('exports the reconnect helpers', () => {
+        const index = readFileSync(resolve(ROOT, 'src/index.ts'), 'utf8');
+        expect(index).toContain('connectToDevice');
+        expect(index).toContain('getPermittedDevices');
+    });
+});
+
 describe('KnobTracker', () => {
     it('counts steps, wraps roll, and releases', () => {
         const knob = new KnobTracker(2, 4);

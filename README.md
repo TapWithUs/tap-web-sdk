@@ -88,6 +88,33 @@ document.querySelector('#connect')!.addEventListener('click', async () => {
 
 `connect()` starts notifications. There is no `start()`. Register callbacks, then enable input. Keep the page open.
 
+### Reconnecting a Tap
+
+After you disconnect, the Tap can stay connected to your computer, so it stops advertising and **does not appear in the `connect()` picker**. `connect()` therefore tries the Tap you last connected **in this page session** first, and opens the picker only when there is none or it does not answer within 3 s (`reuseTimeout`).
+
+- **Same page: works, no flag.** Connect, Disconnect, Connect again reconnects without the picker.
+- **After a page reload: not supported for a Tap that is still connected to the computer.** Chrome can list it through `getDevices()` (needs a flag: Chrome `chrome://flags/#enable-experimental-web-platform-features`, Edge `edge://flags/#enable-experimental-web-platform-features`), but connecting usually fails with "Bluetooth Device is no longer in range" because the Tap is not advertising. `connect()` does not try these devices automatically. Disconnect the Tap in system Bluetooth settings (or reset it) so it advertises, then pick it in the picker.
+
+```typescript
+import { connect, connectToDevice, getPermittedDevices } from '@tapwithus/tapsdk';
+
+await connect();                                  // last Tap of this session, else the picker
+await connect({ reuseKnownDevice: false });       // always the picker (add another Tap)
+await connect({ device });                        // a specific BluetoothDevice, no picker
+
+const devices = await getPermittedDevices();      // session Taps first, then getDevices()
+await connectToDevice(devices[0]);                // same as connect({ device })
+```
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `reuseKnownDevice` | `true` | Reconnect the Tap last connected in this session before opening the picker |
+| `reuseTimeout` | `3000` | Ms to wait on that Tap before the picker opens (max 4000) |
+| `device` | none | Connect to this `BluetoothDevice` and skip the picker |
+| `connectTimeout` | `10000` | Ms to wait for the Bluetooth link (`connectToDevice`, `device`) |
+
+With several Taps connected in one session, `connect()` reuses the most recent one and never guesses beyond that. To let the user choose, list `getPermittedDevices()` as buttons and call `connectToDevice(device)`. Chrome only allows the picker within about 5 s of a click, so `reuseTimeout` is capped at 4 s and the picker still opens after a slow reconnect. Keep "choose" a separate click. `connectToDevice` fails after 10 s by default (`connectTimeout`). The demo has Connect and Choose device… buttons.
+
 ## AI-assisted development
 
 You do not need to be a developer to build with a Tap. Install the Tap skills into your coding agent, then describe the app you want in plain words. The agent knows how to connect, which events each device sends, and how to build common interactions.
@@ -195,10 +222,12 @@ Classic firmware. Input modes (`Text`, `Controller`, `ControllerText`, `Raw`).
 
 | Method | Description |
 |--------|-------------|
-| `connect()` | Opens browser device picker and connects to selected Tap |
+| `connect()` | Reconnects the Tap last connected in this page, else opens the device picker |
 | `disconnect()` | Disconnects from the device |
-| `getPermittedDevices()` | Returns previously permitted devices (Chrome 85+) |
+| `getPermittedDevices()` | Returns Taps this origin was granted (needs `getDevices()`, behind a flag) |
 | `connectToDevice(device)` | Connects to a specific `BluetoothDevice` |
+
+The package-level `connect()`, `connectToDevice(device)` and `getPermittedDevices()` also reuse this session's Tap and detect firmware, returning `TapSDKWeb` or `TapSDKWeb2`. The class methods do not: `connectToDevice(device)` returns a boolean, and `getPermittedDevices()` only lists `getDevices()` results. See "Reconnecting a Tap".
 
 #### Event Registration
 
@@ -434,6 +463,7 @@ npx http-server -p 8000
 - **"Connection failed"**: Ensure your Tap device is powered on and not connected to another device. Close Tap Manager.
 - **"HTTPS required"**: The example works on `localhost`, but if deploying, you need HTTPS
 - **Device picker does not open**: Call `connect()` from a button click
+- **Paired Tap missing from the picker after Disconnect**: In the same page, click Connect again: it reuses the last Tap (see "Reconnecting a Tap"). After a reload, disconnect the Tap in system Bluetooth settings or reset it, then pick it in the picker.
 - **No events appearing (`TapSDKWeb`)**: Switch to Controller Mode. Text Mode may not generate tap events in the browser
 - **No events appearing (`TapSDKWeb2`)**: Enable `MODEL_DETECTION` and set a vision model
 

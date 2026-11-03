@@ -14,7 +14,7 @@ TapXR developer firmware supports the full gesture set (same as TapBand). Do not
 
 ## Two firmware classes, one entry point
 
-`await connect()` opens the browser device picker, detects firmware, and returns:
+`await connect()` reuses the Tap you last connected in this page session, else opens the browser device picker. It detects firmware and returns:
 
 - `TapSDKWeb` (classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`) and `AirGestures`
 - `TapSDKWeb2` (framed firmware, TapXR developer firmware and TapBand): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw, and `UnifiedAirGestures`
@@ -66,6 +66,10 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 ## Gotchas
 
 - Call `connect()` from a click handler. The browser blocks the device picker without a user gesture.
+- A Tap you disconnected from stays connected to the OS and does not advertise, so it is **missing from the picker**. In the same page, call `connect()` again: it reconnects the last Tap without the picker. `connect({ reuseKnownDevice: false })` always opens the picker (use it for a "Choose device" button). `connectToDevice(device)` and `getPermittedDevices()` connect and list specific devices.
+- `navigator.bluetooth.getDevices()` is missing unless a flag is on: Chrome `chrome://flags/#enable-experimental-web-platform-features`, Edge `edge://flags/#enable-experimental-web-platform-features` (then relaunch). Without it `getPermittedDevices()` returns only this session's Taps. Feature-detect, never require it, and tell the user which flag if the list is empty.
+- Reconnect pattern with Connect and Choose device buttons, and the disable-while-connecting rule: see `tap-build-an-app` ("Connect button and reconnect").
+- After a page reload, a Tap still connected to the OS cannot be reconnected from the page (`getDevices()` lists it, but connecting fails with "no longer in range"). Tell the user to disconnect the Tap in system Bluetooth settings or reset it, then use the picker. Do not build a reload-time Reconnect button.
 - Use Chrome or Edge. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
 - `TapSDKWeb` boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
 - `TapSDKWeb2` sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
@@ -185,6 +189,7 @@ When implementing features, always check the Python SDK first:
 
 ### Platform Differences (Web vs Python)
 - **Connection**: Web uses `navigator.bluetooth.requestDevice()` instead of BLE scanning
+- **Reconnect**: Web-only. `connect()` first retries the Tap last connected in the page session, since a Tap still held by the OS does not appear in the picker. Python scans, so it has no equivalent.
 - **Async/Await**: Web Bluetooth is promise-based, Python uses callbacks
 - **No Multi-Device**: Web typically connects to one device at a time
 - **Browser Limitations**: Must be HTTPS or localhost, limited browser support
