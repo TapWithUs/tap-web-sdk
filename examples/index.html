@@ -369,13 +369,8 @@
                 overflow: hidden;
             }
             .title-row { display: none !important; }
-            .connection-bar {
-                flex-shrink: 0;
-                margin: 0 calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
-                padding: 8px 10px;
-            }
-            .connection-row { flex-wrap: wrap; gap: 6px 8px; }
-            .connection-label { font-size: 14px; }
+            /* No connection box on phones: top bar has Connect/Disconnect, ⋯ sheet has the rest. */
+            .connection-bar { display: none !important; }
             .mobile-collapse-toggle {
                 display: inline-flex;
                 align-items: center;
@@ -392,24 +387,6 @@
             }
             .mobile-collapse-toggle .chevron { transition: transform 0.15s; }
             .is-collapsed .mobile-collapse-toggle .chevron { transform: rotate(-90deg); }
-            .connection-bar .controls {
-                display: flex;
-                flex-wrap: nowrap;
-                gap: 4px;
-                flex: 1 1 100%;
-                width: 100%;
-            }
-            .connection-bar .controls button {
-                flex: 1 1 0;
-                min-width: 0;
-                min-height: 44px;
-                padding: 6px 2px;
-                font-size: 11px;
-                line-height: 1.15;
-                white-space: normal;
-            }
-            .connection-bar.is-collapsed .controls,
-            .connection-bar.is-collapsed .device-info { display: none; }
             .controls-pane.is-collapsed .controls-body,
             .controls-pane.is-collapsed .live-stats { display: none; }
             .mobile-topbar {
@@ -718,7 +695,6 @@
         <div id="connectionBar" class="section connection-bar">
             <div class="connection-row">
                 <span class="connection-label">Connection</span>
-                <button id="connectionToggle" type="button" class="mobile-collapse-toggle" aria-expanded="true" aria-label="Collapse connection box"><span class="chevron" aria-hidden="true">⌄</span></button>
                 <div class="controls">
                     <button id="connectBtn" class="btn-primary">Connect</button>
                     <button id="chooseBtn" class="btn-accent" title="Always open the device picker">Choose device…</button>
@@ -1058,17 +1034,12 @@
             btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
         });
 
-        function wireCollapse(toggleId, box) {
-            const toggle = document.getElementById(toggleId);
-            toggle.addEventListener('click', () => {
-                const collapsed = box.classList.toggle('is-collapsed');
-                toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-                toggle.setAttribute('aria-label', `${collapsed ? 'Expand' : 'Collapse'} ${toggleId === 'connectionToggle' ? 'connection' : 'controls'} box`);
-            });
-        }
-
-        wireCollapse('connectionToggle', connectionBar);
-        wireCollapse('controlsToggle', controlsPane);
+        const controlsToggle = document.getElementById('controlsToggle');
+        controlsToggle.addEventListener('click', () => {
+            const collapsed = controlsPane.classList.toggle('is-collapsed');
+            controlsToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            controlsToggle.setAttribute('aria-label', collapsed ? 'Expand controls box' : 'Collapse controls box');
+        });
 
         function openSheet() {
             syncMobileChrome();
