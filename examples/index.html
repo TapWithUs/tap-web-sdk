@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>TapSDK Web Demo</title>
     <style>
         * { box-sizing: border-box; }
@@ -354,39 +354,398 @@
             max-height: 8rem;
             margin: 8px 0 0;
         }
+        .mobile-topbar, .mobile-tabbar, .mobile-sheet-wrap, .live-view { display: none; }
+        .warning-close { display: none; }
+        .log-count { display: none; }
         @media (max-width: 700px) {
-            .app-shell { padding: 8px; gap: 8px; }
-            .title-row { align-items: flex-start; }
-            .status-cluster {
-                margin-left: 0;
+            html, body { overflow: hidden; }
+            body { overflow-x: hidden; }
+            button { min-height: 44px; padding: 10px 16px; }
+            .app-shell {
+                padding: 0 0 calc(62px + env(safe-area-inset-bottom));
+                gap: 8px;
+                max-width: 100vw;
+                overflow: hidden;
+            }
+            .title-row, .connection-bar { display: none !important; }
+            .mobile-topbar {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                flex-shrink: 0;
+                min-height: 60px;
+                background: #fff;
+                border-bottom: 1px solid #e5e5e5;
+                padding: calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));
+            }
+            .mobile-device {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex: 1;
+                min-width: 0;
+            }
+            .mobile-status-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #dc3545;
+                flex-shrink: 0;
+            }
+            .mobile-status-dot.connected { background: #28a745; }
+            .mobile-device-name {
+                font-size: 17px;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            #mobileConnectBtn { flex-shrink: 0; }
+            #mobileMoreBtn {
+                width: 44px;
+                height: 44px;
+                min-height: 44px;
+                padding: 0;
+                flex-shrink: 0;
+                background: transparent;
+                color: #333;
+                font-size: 26px;
+                line-height: 1;
+            }
+            .warning-wrap {
+                margin: 2px calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
+                position: relative;
+                flex-shrink: 0;
+            }
+            .warning {
+                margin: 0;
+                padding-right: 52px;
+            }
+            .warning-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                width: 44px;
+                height: 44px;
+                min-height: 44px;
+                padding: 0;
+                background: transparent;
+                color: #856404;
+                font-size: 22px;
+            }
+            .workspace {
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                padding: 2px calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
+            }
+            .pane { min-width: 0; }
+            body[data-mobile-view="controls"] .log-pane { display: none; }
+            body[data-mobile-view="log"] .controls-pane { display: none; }
+            body[data-mobile-view="live"] .workspace { display: none; }
+            .controls-pane, .log-pane { flex: 1; min-height: 0; }
+            .controls-pane { padding: 12px; }
+            .tab-bar {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 4px;
+                background: #e9ecef;
+                border: none;
+                border-radius: 10px;
+                padding: 4px;
+                margin: 0 0 12px;
+            }
+            .tab-btn {
+                flex: 1 1 0;
+                min-width: 0;
+                min-height: 44px;
+                padding: 8px 2px;
+                font-size: 13px;
+                border: none;
+                border-radius: 8px;
+                margin: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .tab-btn.is-active {
+                background: #fff;
+                color: #222;
+                border: none;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.16);
+            }
+            .controls-body { display: flex; overflow: hidden; }
+            .tab-scroll { overflow-y: auto; }
+            .controls, .mode-buttons {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
                 width: 100%;
             }
-            .connection-row { align-items: flex-start; }
-            .workspace {
-                grid-template-columns: 1fr;
-                grid-template-rows: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            .controls button, .mode-buttons button { min-width: 0; }
+            #setupBtn { width: 100%; min-height: 48px; grid-column: 1 / -1; }
+            .feature-row {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 8px 10px;
+                align-items: center;
             }
-            .controls-body {
-                display: block;
-                overflow: auto;
+            .feature-name { flex: none; min-width: 0; }
+            .feature-actions {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                width: 100%;
+            }
+            .feature-actions:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .feature-actions button { min-width: 0; padding: 10px 6px; }
+            .live-view { display: none; }
+            body[data-mobile-view="live"] .live-view {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 overscroll-behavior: contain;
+                padding: 2px calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left));
             }
-            .tab-scroll {
-                overflow: visible;
-                flex: none;
+            .live-hero {
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                padding: 28px 16px;
+                text-align: center;
+                flex-shrink: 0;
             }
-            .live-stats { margin-top: 8px; }
-            .tab-btn { padding: 8px 10px; font-size: 13px; }
-            .log-toolbar { padding: 8px; }
-            .log-filters { gap: 6px 8px; font-size: 12px; }
+            .live-kicker {
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #888;
+            }
+            .live-event {
+                font-size: 34px;
+                font-weight: 800;
+                line-height: 1.15;
+                margin: 8px 0;
+                overflow-wrap: anywhere;
+            }
+            .live-ago { color: #666; font-size: 14px; overflow-wrap: anywhere; }
+            .live-view .live-stats { margin: 0; padding: 0; border: none; flex-shrink: 0; }
+            .live-view .stat-card { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.08); padding: 14px 6px; }
+            .recent-card {
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                padding: 12px 16px;
+                flex-shrink: 0;
+            }
+            .recent-card h2 { margin-bottom: 4px; }
+            .recent-row {
+                display: flex;
+                gap: 10px;
+                padding: 10px 0;
+                border-bottom: 1px solid #eee;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+            .recent-row:last-child { border-bottom: none; }
+            .recent-row .recent-time { color: #888; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+            .recent-row .recent-msg { min-width: 0; overflow-wrap: anywhere; }
+            .recent-row.tap { color: #0f766e; }
+            .recent-row.gesture { color: #9a3412; }
+            .recent-row.raw { color: #3f6212; }
+            .recent-empty { color: #888; font-size: 13px; padding: 8px 0; }
+            .log-pane { display: flex; }
+            .log-toolbar { padding: 10px 12px 6px; }
+            .log-count {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 28px;
+                height: 28px;
+                padding: 0 8px;
+                border-radius: 14px;
+                background: #333;
+                color: #fff;
+                font-size: 12px;
+                font-weight: 700;
+            }
+            .log-title-row .btn-secondary { min-height: 44px; }
+            .log-filters {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                gap: 8px;
+                padding: 2px 0 6px;
+                scrollbar-width: none;
+                max-width: 100%;
+            }
+            .log-filters::-webkit-scrollbar { display: none; }
+            .log-filters label {
+                position: relative;
+                flex: 0 0 auto;
+                min-height: 44px;
+                padding: 10px 14px;
+                border: 1px solid #444;
+                border-radius: 22px;
+                background: #2d2d2d;
+                color: #ccc;
+            }
+            .log-filters label:has(input:checked) { background: #3a3d41; border-color: #6c757d; color: #fff; }
+            .log-filters label:has(input:not(:checked)) { opacity: 0.55; }
+            .log-filters label:has(input:focus-visible) { outline: 2px solid #007bff; outline-offset: 2px; }
+            .log-filters input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+            .log-filters label::before {
+                content: "";
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #dcdcaa;
+                flex-shrink: 0;
+            }
+            .log-filters label:has(input[value="tap"])::before { background: #4ec9b0; }
+            .log-filters label:has(input[value="mouse"])::before { background: #9cdcfe; }
+            .log-filters label:has(input[value="gesture"])::before { background: #ce9178; }
+            .log-filters label:has(input[value="motion"])::before { background: #569cd6; }
+            .log-filters label:has(input[value="raw"])::before { background: #b5cea8; }
+            .log-filters label:has(input[value="standby"])::before { background: #c586c0; }
+            .log-filters label:has(input[value="error"])::before { background: #f14c4c; }
+            .log-container { font-size: 12.5px; }
+            .log-entry { overflow-wrap: anywhere; }
             pre.info-block { max-height: 5rem; }
-            button { padding: 10px 16px; }
+            .mobile-tabbar {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 30;
+                background: #fff;
+                border-top: 1px solid #e5e5e5;
+                padding: 6px calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+            }
+            .mobile-tab-btn {
+                flex: 1;
+                min-height: 52px;
+                padding: 6px;
+                background: transparent;
+                color: #666;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                font-size: 11px;
+                position: relative;
+                border-radius: 8px;
+            }
+            .mobile-tab-btn svg { width: 22px; height: 22px; }
+            .mobile-tab-btn.is-active { color: #007bff; font-weight: 700; }
+            .log-badge {
+                position: absolute;
+                top: 0;
+                left: calc(50% + 4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                border-radius: 10px;
+                background: #007bff;
+                color: #fff;
+                font-size: 10px;
+                font-weight: 700;
+            }
+            .mobile-sheet-wrap { display: block; position: fixed; inset: 0; z-index: 60; }
+            .mobile-sheet-wrap.hidden { display: none !important; }
+            .sheet-scrim {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                border-radius: 0;
+                background: rgba(0,0,0,0.45);
+            }
+            .sheet {
+                position: absolute;
+                left: 8px;
+                right: 8px;
+                bottom: calc(8px + env(safe-area-inset-bottom));
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-height: calc(100dvh - 24px);
+                overflow-y: auto;
+            }
+            .sheet-card { background: #fff; border-radius: 14px; overflow: hidden; }
+            .sheet-grabber {
+                width: 40px;
+                height: 5px;
+                border-radius: 3px;
+                background: rgba(255,255,255,0.85);
+                margin: 0 auto;
+                flex-shrink: 0;
+            }
+            .sheet-info { padding: 14px 16px; border-bottom: 1px solid #eee; }
+            .sheet-info-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #888; }
+            .sheet-info-name { font-size: 18px; font-weight: 700; margin: 4px 0 8px; overflow-wrap: anywhere; }
+            .sheet-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 13px; }
+            .sheet-dl dt { color: #888; }
+            .sheet-dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-family: Consolas, Monaco, monospace; }
+            .sheet-item {
+                width: 100%;
+                min-height: 56px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                background: #fff;
+                color: #007bff;
+                font-size: 16px;
+                text-align: left;
+                border-radius: 0;
+                border-bottom: 1px solid #eee;
+            }
+            .sheet-item:last-child { border-bottom: none; }
+            .sheet-item svg { width: 22px; height: 22px; flex-shrink: 0; }
+            .sheet-cancel {
+                width: 100%;
+                min-height: 56px;
+                background: #fff;
+                color: #007bff;
+                font-size: 16px;
+                font-weight: 700;
+                border-radius: 14px;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
-<body>
+<body data-mobile-view="controls">
     <div class="app-shell">
+        <header class="mobile-topbar">
+            <div class="mobile-device">
+                <span id="mobileStatusDot" class="mobile-status-dot" aria-hidden="true"></span>
+                <span id="mobileDeviceName" class="mobile-device-name">TapSDK Web</span>
+            </div>
+            <button id="mobileConnectBtn" class="btn-primary" type="button">Connect</button>
+            <button id="mobileMoreBtn" type="button" aria-label="More device actions" aria-haspopup="dialog" aria-expanded="false">&#8942;</button>
+        </header>
         <div class="title-row">
             <div class="brand">
                 <h1>TapSDK Web</h1>
@@ -398,6 +757,7 @@
             </div>
         </div>
 
+        <div id="btWarning" class="warning-wrap">
         <details class="warning">
             <summary>Web Bluetooth needs a click, Chrome or Edge, and HTTPS or localhost</summary>
             <p>
@@ -406,8 +766,10 @@
                 <code>connect()</code> returns TapSDKWeb or TapSDKWeb2 after firmware detect.
             </p>
         </details>
+            <button id="warningCloseBtn" class="warning-close" type="button" aria-label="Dismiss notice">&times;</button>
+        </div>
 
-        <div class="section connection-bar">
+        <div id="connectionBar" class="section connection-bar">
             <div class="connection-row">
                 <span class="connection-label">Connection</span>
                 <div class="controls">
@@ -579,6 +941,7 @@
                 <div class="log-toolbar">
                     <div class="log-title-row">
                         <h2>Event Log</h2>
+                        <span id="logCount" class="log-count">0</span>
                         <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
                     </div>
                     <div class="log-filters">
@@ -595,6 +958,68 @@
                 </div>
                 <div id="log" class="log-container"></div>
             </section>
+        </div>
+
+        <section id="liveView" class="live-view" aria-label="Live">
+            <div class="live-hero">
+                <div id="liveLastKicker" class="live-kicker">Last event</div>
+                <div id="liveLastValue" class="live-event">No event yet</div>
+                <div id="liveLastMeta" class="live-ago">Tap or make a gesture</div>
+            </div>
+            <div id="liveStatsSlot"></div>
+            <div class="recent-card">
+                <h2>Recent</h2>
+                <div id="recentList">
+                    <div class="recent-empty">No events yet</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <nav class="mobile-tabbar" aria-label="Views">
+        <button type="button" class="mobile-tab-btn is-active" data-view="controls" aria-selected="true">
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="16" height="3.2" rx="1.6"/><rect x="3" y="9.4" width="16" height="3.2" rx="1.6"/><rect x="3" y="14.8" width="16" height="3.2" rx="1.6"/><circle cx="8" cy="5.6" r="1.15" fill="currentColor" stroke="none"/><circle cx="14" cy="11" r="1.15" fill="currentColor" stroke="none"/><circle cx="9.5" cy="16.4" r="1.15" fill="currentColor" stroke="none"/></svg>
+            <span>Controls</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-view="live" aria-selected="false">
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14.5 L7 9.5 L10.2 13.2 L14.5 6.5 L19 14.5"/></svg>
+            <span>Live</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-view="log" aria-selected="false">
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 6.5h12M5 11h12M5 15.5h8"/></svg>
+            <span>Log</span>
+            <span id="logBadge" class="log-badge hidden">0</span>
+        </button>
+    </nav>
+
+    <div id="mobileSheet" class="mobile-sheet-wrap hidden">
+        <button type="button" class="sheet-scrim" id="sheetScrim" aria-label="Close device actions"></button>
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="Device actions">
+            <div class="sheet-grabber" aria-hidden="true"></div>
+            <div class="sheet-card">
+                <div class="sheet-info">
+                    <div id="sheetStateLabel" class="sheet-info-label">Disconnected</div>
+                    <div id="sheetDeviceName" class="sheet-info-name">TapSDK Web</div>
+                    <dl class="sheet-dl">
+                        <dt>Serial</dt><dd id="sheetSerial">&mdash;</dd>
+                        <dt>Protocol</dt><dd id="sheetProtocol">&mdash;</dd>
+                    </dl>
+                </div>
+                <div id="sheetDeviceInfoSlot"></div>
+                <button id="sheetChooseBtn" class="sheet-item" type="button">
+                    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8H4.5A1.5 1.5 0 0 0 3 9.5v7A1.5 1.5 0 0 0 4.5 18h7A1.5 1.5 0 0 0 13 16.5V15"/><rect x="9" y="4" width="10" height="11" rx="1.5"/></svg>
+                    <span>Choose device&hellip;</span>
+                </button>
+                <button id="sheetInfoBtn" class="sheet-item" type="button" disabled>
+                    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M11 10v5"/><circle cx="11" cy="7.5" r="0.8" fill="currentColor" stroke="none"/></svg>
+                    <span>Device Info</span>
+                </button>
+                <button id="sheetVibrateBtn" class="sheet-item" type="button" disabled>
+                    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="4" width="8" height="14" rx="2"/><path d="M4 8l-1.5 1.5L4 11l-1.5 1.5L4 14M18 8l1.5 1.5L18 11l1.5 1.5L18 14"/></svg>
+                    <span>Vibrate</span>
+                </button>
+            </div>
+            <button id="sheetCancelBtn" class="sheet-cancel" type="button">Cancel</button>
         </div>
     </div>
 
@@ -630,6 +1055,32 @@
         const disconnectedHint = document.getElementById('disconnectedHint');
         const tabFallback = document.getElementById('tabFallback');
         const logFilters = document.querySelectorAll('.log-filter');
+        const mobileMq = window.matchMedia('(max-width: 700px)');
+        const controlsPane = document.querySelector('.controls-pane');
+        const connectionBar = document.getElementById('connectionBar');
+        const liveStatsSlot = document.getElementById('liveStatsSlot');
+        const sheetDeviceInfoSlot = document.getElementById('sheetDeviceInfoSlot');
+        const mobileConnectBtn = document.getElementById('mobileConnectBtn');
+        const mobileMoreBtn = document.getElementById('mobileMoreBtn');
+        const mobileDeviceName = document.getElementById('mobileDeviceName');
+        const mobileStatusDot = document.getElementById('mobileStatusDot');
+        const mobileSheet = document.getElementById('mobileSheet');
+        const sheetChooseBtn = document.getElementById('sheetChooseBtn');
+        const sheetInfoBtn = document.getElementById('sheetInfoBtn');
+        const sheetVibrateBtn = document.getElementById('sheetVibrateBtn');
+        const logBadge = document.getElementById('logBadge');
+        const logCountEl = document.getElementById('logCount');
+        const warningEl = document.getElementById('btWarning');
+        const recentList = document.getElementById('recentList');
+        const liveLastKicker = document.getElementById('liveLastKicker');
+        const liveLastValue = document.getElementById('liveLastValue');
+        const liveLastMeta = document.getElementById('liveLastMeta');
+        let isConnectedState = false;
+        let currentProtocol = '';
+        let warningDismissed = false;
+        let eventCount = 0;
+        let lastLiveAt = 0;
+        let lastLiveRaw = '';
 
         const connectBtn = document.getElementById('connectBtn');
         const chooseBtn = document.getElementById('chooseBtn');
@@ -697,6 +1148,152 @@
             btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
         });
 
+        function setMobileView(view) {
+            document.body.dataset.mobileView = view;
+            document.querySelectorAll('.mobile-tab-btn').forEach((btn) => {
+                const on = btn.dataset.view === view;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+
+        document.querySelectorAll('.mobile-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => setMobileView(btn.dataset.view));
+        });
+
+        function openSheet() {
+            syncMobileChrome();
+            mobileSheet.classList.remove('hidden');
+            mobileMoreBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeSheet() {
+            mobileSheet.classList.add('hidden');
+            mobileMoreBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        mobileMoreBtn.addEventListener('click', openSheet);
+        document.getElementById('sheetCancelBtn').addEventListener('click', closeSheet);
+        document.getElementById('sheetScrim').addEventListener('click', closeSheet);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeSheet();
+        });
+        sheetChooseBtn.addEventListener('click', () => { closeSheet(); chooseBtn.click(); });
+        sheetInfoBtn.addEventListener('click', () => { deviceInfoBtn.click(); });
+        sheetVibrateBtn.addEventListener('click', () => { vibrateBtn.click(); });
+        mobileConnectBtn.addEventListener('click', () => {
+            if (isConnectedState) disconnectBtn.click();
+            else connectBtn.click();
+        });
+        document.getElementById('warningCloseBtn').addEventListener('click', () => {
+            warningDismissed = true;
+            updateWarningVisibility();
+        });
+
+        function updateWarningVisibility() {
+            if (!mobileMq.matches) {
+                warningEl.classList.remove('hidden');
+                return;
+            }
+            const btMissing = !('bluetooth' in navigator);
+            const relevant = btMissing || !isConnectedState;
+            warningEl.classList.toggle('hidden', warningDismissed || !relevant);
+        }
+
+        function syncMobileChrome() {
+            const name = isConnectedState && currentProtocol ? currentProtocol : 'TapSDK Web';
+            mobileDeviceName.textContent = name;
+            mobileStatusDot.classList.toggle('connected', isConnectedState);
+            mobileConnectBtn.textContent = isConnectedState ? 'Disconnect' : 'Connect';
+            mobileConnectBtn.className = isConnectedState ? 'btn-danger' : 'btn-primary';
+            mobileConnectBtn.disabled = isConnectedState ? disconnectBtn.disabled : connectBtn.disabled;
+            sheetChooseBtn.disabled = chooseBtn.disabled;
+            sheetInfoBtn.disabled = deviceInfoBtn.disabled;
+            sheetVibrateBtn.disabled = vibrateBtn.disabled;
+            document.getElementById('sheetDeviceName').textContent = name;
+            document.getElementById('sheetStateLabel').textContent = isConnectedState ? 'Connected' : 'Disconnected';
+            const serialText = serialEl.classList.contains('hidden') ? '' : serialEl.textContent.replace(/^Serial:\s*/, '');
+            document.getElementById('sheetSerial').textContent = serialText || '—';
+            document.getElementById('sheetProtocol').textContent = currentProtocol || '—';
+        }
+
+        function updateLogCount() {
+            logBadge.textContent = String(eventCount);
+            logBadge.classList.toggle('hidden', eventCount === 0);
+            logCountEl.textContent = String(eventCount);
+        }
+
+        function friendlyGestureName(raw) {
+            const names = {
+                COMBINED_GESTURE_LEFT: 'Swipe left',
+                COMBINED_GESTURE_RIGHT: 'Swipe right',
+                COMBINED_GESTURE_UP: 'Swipe up',
+                COMBINED_GESTURE_DOWN: 'Swipe down',
+                COMBINED_GESTURE_AB: 'Pinch thumb + index',
+                COMBINED_GESTURE_AC: 'Pinch thumb + middle',
+                COMBINED_GESTURE_AD: 'Pinch thumb + ring',
+                COMBINED_GESTURE_AE: 'Pinch thumb + pinky',
+                COMBINED_GESTURE_FIST: 'Fist',
+                COMBINED_GESTURE_AB_HOLD: 'Pinch thumb + index hold',
+                COMBINED_GESTURE_AC_HOLD: 'Pinch thumb + middle hold',
+                COMBINED_GESTURE_AD_HOLD: 'Pinch thumb + ring hold',
+                COMBINED_GESTURE_AE_HOLD: 'Pinch thumb + pinky hold',
+                COMBINED_GESTURE_FIST_HOLD: 'Fist hold',
+            };
+            if (names[raw]) return names[raw];
+            const text = raw.replace(/_/g, ' ').toLowerCase();
+            return text ? text.charAt(0).toUpperCase() + text.slice(1) : raw;
+        }
+
+        function updateLiveAgo() {
+            if (!lastLiveAt) return;
+            const seconds = Math.floor((Date.now() - lastLiveAt) / 1000);
+            const ago = seconds < 2 ? 'just now' : `${seconds}s ago`;
+            liveLastMeta.textContent = `${lastLiveRaw} · ${ago}`;
+        }
+
+        function noteLiveEvent(message, type, time) {
+            if (type === 'tap' || type === 'gesture') {
+                const raw = message.replace(/^(Tap|Gesture):\s*/, '');
+                lastLiveRaw = raw;
+                lastLiveAt = Date.now();
+                liveLastKicker.textContent = type === 'tap' ? 'Last tap' : 'Last gesture';
+                liveLastValue.textContent = type === 'gesture' ? friendlyGestureName(raw) : raw;
+                updateLiveAgo();
+            }
+            if (type === 'tap' || type === 'gesture' || type === 'raw') {
+                const empty = recentList.querySelector('.recent-empty');
+                if (empty) empty.remove();
+                const row = document.createElement('div');
+                row.className = `recent-row ${type}`;
+                const timeEl = document.createElement('span');
+                timeEl.className = 'recent-time';
+                timeEl.textContent = time;
+                const msgEl = document.createElement('span');
+                msgEl.className = 'recent-msg';
+                msgEl.textContent = message;
+                row.append(timeEl, msgEl);
+                recentList.prepend(row);
+                while (recentList.children.length > 5) recentList.lastElementChild.remove();
+            }
+        }
+
+        function placeResponsiveNodes() {
+            if (mobileMq.matches) {
+                liveStatsSlot.appendChild(liveStats);
+                sheetDeviceInfoSlot.appendChild(deviceInfoSection);
+            } else {
+                controlsPane.appendChild(liveStats);
+                connectionBar.appendChild(deviceInfoSection);
+                closeSheet();
+            }
+            updateWarningVisibility();
+            syncMobileChrome();
+        }
+
+        if (typeof mobileMq.addEventListener === 'function') mobileMq.addEventListener('change', placeResponsiveNodes);
+        else if (typeof mobileMq.addListener === 'function') mobileMq.addListener(placeResponsiveNodes);
+
         function updateStats() {
             document.getElementById('statTaps').textContent = String(stats.taps);
             document.getElementById('statGestures').textContent = String(stats.gestures);
@@ -758,6 +1355,9 @@
             entry.style.display = getEnabledFilters().has(type) ? 'block' : 'none';
             logEl.appendChild(entry);
             logEl.scrollTop = logEl.scrollHeight;
+            eventCount += 1;
+            updateLogCount();
+            noteLiveEvent(message, type, time);
         }
 
         function setPanelButtons(buttons, enabled) {
@@ -765,6 +1365,8 @@
         }
 
         function setConnected(connected, protocol) {
+            isConnectedState = connected;
+            currentProtocol = connected ? (protocol || '') : '';
             statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
             statusEl.textContent = connected
                 ? `Status: Connected (${protocol})`
@@ -796,6 +1398,8 @@
                 resetFeatureState();
                 resetStats();
             }
+            syncMobileChrome();
+            updateWarningVisibility();
         }
 
         function wireCommon(current) {
@@ -812,6 +1416,8 @@
                 setConnected(true, 'TapSDKWeb');
             });
             current.registerTapEvents((_id, tapcode) => {
+                stats.taps += 1;
+                updateStats();
                 const fingers = tapcode.toString(2).padStart(5, '0').split('').reverse()
                     .map((b, i) => b === '1' ? ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'][i] : null)
                     .filter(Boolean).join(', ');
@@ -821,6 +1427,9 @@
                 log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`, 'mouse');
             });
             current.registerAirGestureEvents((_id, gesture) => {
+                stats.gestures += 1;
+                gestureWindow.push(Date.now());
+                updateStats();
                 const name = Object.entries(AirGestures).find(([, v]) => v === gesture)?.[0] ?? gesture;
                 log(`Gesture: ${name}`, 'gesture');
             });
@@ -828,6 +1437,8 @@
                 log(`Mouse mode: ${mouseMode}`, 'state');
             });
             current.registerRawDataEvents((_id, packets) => {
+                stats.raw += packets.length;
+                updateStats();
                 for (const pkt of packets) {
                     log(`Raw [${pkt.type}] ts=${pkt.ts}: ${pkt.payload.map((v) => v.toFixed(2)).join(', ')}`, 'raw');
                 }
@@ -877,6 +1488,7 @@
         function setConnecting(busy) {
             connectBtn.disabled = busy;
             chooseBtn.disabled = busy;
+            syncMobileChrome();
         }
 
         async function attach(connecting) {
@@ -1087,10 +1699,20 @@
 
         document.getElementById('clearLogBtn').addEventListener('click', () => {
             logEl.innerHTML = '';
+            eventCount = 0;
+            updateLogCount();
+            recentList.innerHTML = '<div class="recent-empty">No events yet</div>';
+            lastLiveAt = 0;
+            lastLiveRaw = '';
+            liveLastKicker.textContent = 'Last event';
+            liveLastValue.textContent = 'No event yet';
+            liveLastMeta.textContent = 'Tap or make a gesture';
         });
 
-        setInterval(updateStats, 250);
+        setInterval(() => { updateStats(); updateLiveAgo(); }, 250);
 
+        placeResponsiveNodes();
+        updateLogCount();
         log('Ready. Click Connect (reuses the last Tap) or Choose device…. Firmware detect returns TapSDKWeb or TapSDKWeb2.', 'info');
         setConnected(false);
     </script>
