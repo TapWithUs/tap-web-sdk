@@ -241,33 +241,36 @@
         .feature-actions { display: flex; flex-wrap: wrap; gap: 8px; }
         .live-stats {
             flex-shrink: 0;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #eee;
+            margin: 0;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 6px;
         }
         .stat-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 10px 8px;
+            background: #2d2d2d;
+            border-radius: 6px;
+            padding: 6px 2px;
             text-align: center;
+            min-width: 0;
         }
         .stat-value {
-            font-size: 1.35em;
+            font-size: 1.1em;
             font-weight: 700;
-            color: #007bff;
+            color: #66b0ff;
             font-variant-numeric: tabular-nums;
         }
         .stat-label {
-            font-size: 11px;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #888;
-            margin-top: 4px;
+            letter-spacing: 0.03em;
+            color: #999;
+            margin-top: 2px;
+            line-height: 1.2;
         }
         .log-pane {
             background: #1e1e1e;
@@ -387,8 +390,7 @@
             }
             .mobile-collapse-toggle .chevron { transition: transform 0.15s; }
             .is-collapsed .mobile-collapse-toggle .chevron { transform: rotate(-90deg); }
-            .controls-pane.is-collapsed .controls-body,
-            .controls-pane.is-collapsed .live-stats { display: none; }
+            .controls-pane.is-collapsed .controls-body { display: none; }
             .mobile-topbar {
                 display: flex;
                 align-items: center;
@@ -592,6 +594,9 @@
             .log-filters label:has(input[value="error"])::before { background: #f14c4c; }
             .log-container { font-size: 12.5px; }
             .log-entry { overflow-wrap: anywhere; }
+            .live-stats { padding: 8px; }
+            .stat-value { font-size: 15px; }
+            .stat-label { font-size: 8.5px; }
             pre.info-block { max-height: 5rem; }
             .mobile-sheet-wrap { display: block; position: fixed; inset: 0; z-index: 60; }
             .mobile-sheet-wrap.hidden { display: none !important; }
@@ -830,6 +835,28 @@
                     </div>
                 </div>
 
+                </div>
+            </section>
+
+            <section class="pane log-pane" aria-label="Event Log">
+                <div class="log-toolbar">
+                    <div class="log-title-row">
+                        <h2>Event Log</h2>
+                        <span id="logCount" class="log-count">0</span>
+                        <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
+                    </div>
+                    <div class="log-filters">
+                        <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
+                        <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
+                        <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
+                        <label><input type="checkbox" class="log-filter" value="motion" checked> Motion</label>
+                        <label><input type="checkbox" class="log-filter" value="raw" checked> Raw</label>
+                        <label><input type="checkbox" class="log-filter" value="standby" checked> Standby</label>
+                        <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
+                        <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
+                        <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
+                    </div>
+                </div>
                 <div id="liveStats" class="live-stats hidden">
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -856,28 +883,6 @@
                             <div class="stat-value" id="statGestureRate">—</div>
                             <div class="stat-label">Gestures /s</div>
                         </div>
-                    </div>
-                </div>
-                </div>
-            </section>
-
-            <section class="pane log-pane" aria-label="Event Log">
-                <div class="log-toolbar">
-                    <div class="log-title-row">
-                        <h2>Event Log</h2>
-                        <span id="logCount" class="log-count">0</span>
-                        <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
-                    </div>
-                    <div class="log-filters">
-                        <label><input type="checkbox" class="log-filter" value="tap" checked> Taps</label>
-                        <label><input type="checkbox" class="log-filter" value="mouse" checked> Mouse</label>
-                        <label><input type="checkbox" class="log-filter" value="gesture" checked> Gestures</label>
-                        <label><input type="checkbox" class="log-filter" value="motion" checked> Motion</label>
-                        <label><input type="checkbox" class="log-filter" value="raw" checked> Raw</label>
-                        <label><input type="checkbox" class="log-filter" value="standby" checked> Standby</label>
-                        <label><input type="checkbox" class="log-filter" value="state" checked> State</label>
-                        <label><input type="checkbox" class="log-filter" value="info" checked> Info</label>
-                        <label><input type="checkbox" class="log-filter" value="error" checked> Errors</label>
                     </div>
                 </div>
                 <div id="log" class="log-container"></div>
