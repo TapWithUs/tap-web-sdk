@@ -354,20 +354,64 @@
             max-height: 8rem;
             margin: 8px 0 0;
         }
-        .mobile-topbar, .mobile-tabbar, .mobile-sheet-wrap, .live-view { display: none; }
+        .mobile-topbar, .mobile-sheet-wrap { display: none; }
         .warning-close { display: none; }
         .log-count { display: none; }
+        .mobile-collapse-toggle { display: none; }
         @media (max-width: 700px) {
             html, body { overflow: hidden; }
             body { overflow-x: hidden; }
             button { min-height: 44px; padding: 10px 16px; }
             .app-shell {
-                padding: 0 0 calc(62px + env(safe-area-inset-bottom));
+                padding: 0 0 env(safe-area-inset-bottom);
                 gap: 8px;
                 max-width: 100vw;
                 overflow: hidden;
             }
-            .title-row, .connection-bar { display: none !important; }
+            .title-row { display: none !important; }
+            .connection-bar {
+                flex-shrink: 0;
+                margin: 0 calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
+                padding: 8px 10px;
+            }
+            .connection-row { flex-wrap: wrap; gap: 6px 8px; }
+            .connection-label { font-size: 14px; }
+            .mobile-collapse-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                min-height: 44px;
+                margin-left: auto;
+                padding: 0;
+                background: transparent;
+                color: #555;
+                font-size: 20px;
+                line-height: 1;
+            }
+            .mobile-collapse-toggle .chevron { transition: transform 0.15s; }
+            .is-collapsed .mobile-collapse-toggle .chevron { transform: rotate(-90deg); }
+            .connection-bar .controls {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 4px;
+                flex: 1 1 100%;
+                width: 100%;
+            }
+            .connection-bar .controls button {
+                flex: 1 1 0;
+                min-width: 0;
+                min-height: 44px;
+                padding: 6px 2px;
+                font-size: 11px;
+                line-height: 1.15;
+                white-space: normal;
+            }
+            .connection-bar.is-collapsed .controls,
+            .connection-bar.is-collapsed .device-info { display: none; }
+            .controls-pane.is-collapsed .controls-body,
+            .controls-pane.is-collapsed .live-stats { display: none; }
             .mobile-topbar {
                 display: flex;
                 align-items: center;
@@ -442,17 +486,22 @@
             .workspace {
                 flex: 1;
                 min-height: 0;
-                display: flex;
-                flex-direction: column;
-                gap: 0;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(0, auto) minmax(50dvh, 1fr);
+                gap: 8px;
                 padding: 2px calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
             }
             .pane { min-width: 0; }
-            body[data-mobile-view="controls"] .log-pane { display: none; }
-            body[data-mobile-view="log"] .controls-pane { display: none; }
-            body[data-mobile-view="live"] .workspace { display: none; }
-            .controls-pane, .log-pane { flex: 1; min-height: 0; }
-            .controls-pane { padding: 12px; }
+            .controls-pane {
+                padding: 8px 10px;
+                min-height: 0;
+                max-height: calc(50dvh - 190px);
+                max-height: max(96px, calc(50dvh - 190px));
+            }
+            .controls-pane.is-collapsed { max-height: none; }
+            .controls-pane h2 { display: none; }
+            .log-pane { min-height: 0; }
             .tab-bar {
                 display: flex;
                 flex-wrap: nowrap;
@@ -467,8 +516,8 @@
                 flex: 1 1 0;
                 min-width: 0;
                 min-height: 44px;
-                padding: 8px 2px;
-                font-size: 13px;
+                padding: 8px 1px;
+                font-size: 12px;
                 border: none;
                 border-radius: 8px;
                 margin: 0;
@@ -482,6 +531,7 @@
                 border: none;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.16);
             }
+            .tab-bar .mobile-collapse-toggle { flex: 0 0 44px; margin-left: 0; }
             .controls-body { display: flex; overflow: hidden; }
             .tab-scroll { overflow-y: auto; }
             .controls, .mode-buttons {
@@ -508,66 +558,6 @@
             }
             .feature-actions:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .feature-actions button { min-width: 0; padding: 10px 6px; }
-            .live-view { display: none; }
-            body[data-mobile-view="live"] .live-view {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                flex: 1;
-                min-height: 0;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                overscroll-behavior: contain;
-                padding: 2px calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left));
-            }
-            .live-hero {
-                background: #fff;
-                border-radius: 12px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                padding: 28px 16px;
-                text-align: center;
-                flex-shrink: 0;
-            }
-            .live-kicker {
-                font-size: 12px;
-                font-weight: 700;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                color: #888;
-            }
-            .live-event {
-                font-size: 34px;
-                font-weight: 800;
-                line-height: 1.15;
-                margin: 8px 0;
-                overflow-wrap: anywhere;
-            }
-            .live-ago { color: #666; font-size: 14px; overflow-wrap: anywhere; }
-            .live-view .live-stats { margin: 0; padding: 0; border: none; flex-shrink: 0; }
-            .live-view .stat-card { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.08); padding: 14px 6px; }
-            .recent-card {
-                background: #fff;
-                border-radius: 12px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                padding: 12px 16px;
-                flex-shrink: 0;
-            }
-            .recent-card h2 { margin-bottom: 4px; }
-            .recent-row {
-                display: flex;
-                gap: 10px;
-                padding: 10px 0;
-                border-bottom: 1px solid #eee;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-            .recent-row:last-child { border-bottom: none; }
-            .recent-row .recent-time { color: #888; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-            .recent-row .recent-msg { min-width: 0; overflow-wrap: anywhere; }
-            .recent-row.tap { color: #0f766e; }
-            .recent-row.gesture { color: #9a3412; }
-            .recent-row.raw { color: #3f6212; }
-            .recent-empty { color: #888; font-size: 13px; padding: 8px 0; }
             .log-pane { display: flex; }
             .log-toolbar { padding: 10px 12px 6px; }
             .log-count {
@@ -626,50 +616,6 @@
             .log-container { font-size: 12.5px; }
             .log-entry { overflow-wrap: anywhere; }
             pre.info-block { max-height: 5rem; }
-            .mobile-tabbar {
-                display: flex;
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 30;
-                background: #fff;
-                border-top: 1px solid #e5e5e5;
-                padding: 6px calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
-            }
-            .mobile-tab-btn {
-                flex: 1;
-                min-height: 52px;
-                padding: 6px;
-                background: transparent;
-                color: #666;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 2px;
-                font-size: 11px;
-                position: relative;
-                border-radius: 8px;
-            }
-            .mobile-tab-btn svg { width: 22px; height: 22px; }
-            .mobile-tab-btn.is-active { color: #007bff; font-weight: 700; }
-            .log-badge {
-                position: absolute;
-                top: 0;
-                left: calc(50% + 4px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 20px;
-                height: 20px;
-                padding: 0 5px;
-                border-radius: 10px;
-                background: #007bff;
-                color: #fff;
-                font-size: 10px;
-                font-weight: 700;
-            }
             .mobile-sheet-wrap { display: block; position: fixed; inset: 0; z-index: 60; }
             .mobile-sheet-wrap.hidden { display: none !important; }
             .sheet-scrim {
@@ -736,7 +682,7 @@
         }
     </style>
 </head>
-<body data-mobile-view="controls">
+<body>
     <div class="app-shell">
         <header class="mobile-topbar">
             <div class="mobile-device">
@@ -772,6 +718,7 @@
         <div id="connectionBar" class="section connection-bar">
             <div class="connection-row">
                 <span class="connection-label">Connection</span>
+                <button id="connectionToggle" type="button" class="mobile-collapse-toggle" aria-expanded="true" aria-label="Collapse connection box"><span class="chevron" aria-hidden="true">⌄</span></button>
                 <div class="controls">
                     <button id="connectBtn" class="btn-primary">Connect</button>
                     <button id="chooseBtn" class="btn-accent" title="Always open the device picker">Choose device…</button>
@@ -787,12 +734,13 @@
         </div>
 
         <div class="workspace">
-            <section class="pane controls-pane" aria-label="Controls">
+            <section id="controlsPane" class="pane controls-pane" aria-label="Controls">
                 <div class="tab-bar" role="tablist" aria-label="Control groups">
                     <button type="button" class="tab-btn is-active" role="tab" data-tab="input" aria-selected="true">Input Mode</button>
                     <button type="button" class="tab-btn" role="tab" data-tab="features" aria-selected="false">Features</button>
                     <button type="button" class="tab-btn" role="tab" data-tab="vision" aria-selected="false">Vision</button>
                     <button type="button" class="tab-btn" role="tab" data-tab="imu" aria-selected="false">IMU</button>
+                    <button id="controlsToggle" type="button" class="mobile-collapse-toggle" aria-expanded="true" aria-label="Collapse controls box"><span class="chevron" aria-hidden="true">⌄</span></button>
                 </div>
                 <div class="controls-body">
                     <div class="tab-scroll">
@@ -960,37 +908,7 @@
             </section>
         </div>
 
-        <section id="liveView" class="live-view" aria-label="Live">
-            <div class="live-hero">
-                <div id="liveLastKicker" class="live-kicker">Last event</div>
-                <div id="liveLastValue" class="live-event">No event yet</div>
-                <div id="liveLastMeta" class="live-ago">Tap or make a gesture</div>
-            </div>
-            <div id="liveStatsSlot"></div>
-            <div class="recent-card">
-                <h2>Recent</h2>
-                <div id="recentList">
-                    <div class="recent-empty">No events yet</div>
-                </div>
-            </div>
-        </section>
     </div>
-
-    <nav class="mobile-tabbar" aria-label="Views">
-        <button type="button" class="mobile-tab-btn is-active" data-view="controls" aria-selected="true">
-            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="16" height="3.2" rx="1.6"/><rect x="3" y="9.4" width="16" height="3.2" rx="1.6"/><rect x="3" y="14.8" width="16" height="3.2" rx="1.6"/><circle cx="8" cy="5.6" r="1.15" fill="currentColor" stroke="none"/><circle cx="14" cy="11" r="1.15" fill="currentColor" stroke="none"/><circle cx="9.5" cy="16.4" r="1.15" fill="currentColor" stroke="none"/></svg>
-            <span>Controls</span>
-        </button>
-        <button type="button" class="mobile-tab-btn" data-view="live" aria-selected="false">
-            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14.5 L7 9.5 L10.2 13.2 L14.5 6.5 L19 14.5"/></svg>
-            <span>Live</span>
-        </button>
-        <button type="button" class="mobile-tab-btn" data-view="log" aria-selected="false">
-            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 6.5h12M5 11h12M5 15.5h8"/></svg>
-            <span>Log</span>
-            <span id="logBadge" class="log-badge hidden">0</span>
-        </button>
-    </nav>
 
     <div id="mobileSheet" class="mobile-sheet-wrap hidden">
         <button type="button" class="sheet-scrim" id="sheetScrim" aria-label="Close device actions"></button>
@@ -1056,9 +974,8 @@
         const tabFallback = document.getElementById('tabFallback');
         const logFilters = document.querySelectorAll('.log-filter');
         const mobileMq = window.matchMedia('(max-width: 700px)');
-        const controlsPane = document.querySelector('.controls-pane');
+        const controlsPane = document.getElementById('controlsPane');
         const connectionBar = document.getElementById('connectionBar');
-        const liveStatsSlot = document.getElementById('liveStatsSlot');
         const sheetDeviceInfoSlot = document.getElementById('sheetDeviceInfoSlot');
         const mobileConnectBtn = document.getElementById('mobileConnectBtn');
         const mobileMoreBtn = document.getElementById('mobileMoreBtn');
@@ -1068,19 +985,12 @@
         const sheetChooseBtn = document.getElementById('sheetChooseBtn');
         const sheetInfoBtn = document.getElementById('sheetInfoBtn');
         const sheetVibrateBtn = document.getElementById('sheetVibrateBtn');
-        const logBadge = document.getElementById('logBadge');
         const logCountEl = document.getElementById('logCount');
         const warningEl = document.getElementById('btWarning');
-        const recentList = document.getElementById('recentList');
-        const liveLastKicker = document.getElementById('liveLastKicker');
-        const liveLastValue = document.getElementById('liveLastValue');
-        const liveLastMeta = document.getElementById('liveLastMeta');
         let isConnectedState = false;
         let currentProtocol = '';
         let warningDismissed = false;
         let eventCount = 0;
-        let lastLiveAt = 0;
-        let lastLiveRaw = '';
 
         const connectBtn = document.getElementById('connectBtn');
         const chooseBtn = document.getElementById('chooseBtn');
@@ -1148,18 +1058,17 @@
             btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
         });
 
-        function setMobileView(view) {
-            document.body.dataset.mobileView = view;
-            document.querySelectorAll('.mobile-tab-btn').forEach((btn) => {
-                const on = btn.dataset.view === view;
-                btn.classList.toggle('is-active', on);
-                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        function wireCollapse(toggleId, box) {
+            const toggle = document.getElementById(toggleId);
+            toggle.addEventListener('click', () => {
+                const collapsed = box.classList.toggle('is-collapsed');
+                toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                toggle.setAttribute('aria-label', `${collapsed ? 'Expand' : 'Collapse'} ${toggleId === 'connectionToggle' ? 'connection' : 'controls'} box`);
             });
         }
 
-        document.querySelectorAll('.mobile-tab-btn').forEach((btn) => {
-            btn.addEventListener('click', () => setMobileView(btn.dataset.view));
-        });
+        wireCollapse('connectionToggle', connectionBar);
+        wireCollapse('controlsToggle', controlsPane);
 
         function openSheet() {
             syncMobileChrome();
@@ -1218,72 +1127,13 @@
         }
 
         function updateLogCount() {
-            logBadge.textContent = String(eventCount);
-            logBadge.classList.toggle('hidden', eventCount === 0);
             logCountEl.textContent = String(eventCount);
-        }
-
-        function friendlyGestureName(raw) {
-            const names = {
-                COMBINED_GESTURE_LEFT: 'Swipe left',
-                COMBINED_GESTURE_RIGHT: 'Swipe right',
-                COMBINED_GESTURE_UP: 'Swipe up',
-                COMBINED_GESTURE_DOWN: 'Swipe down',
-                COMBINED_GESTURE_AB: 'Pinch thumb + index',
-                COMBINED_GESTURE_AC: 'Pinch thumb + middle',
-                COMBINED_GESTURE_AD: 'Pinch thumb + ring',
-                COMBINED_GESTURE_AE: 'Pinch thumb + pinky',
-                COMBINED_GESTURE_FIST: 'Fist',
-                COMBINED_GESTURE_AB_HOLD: 'Pinch thumb + index hold',
-                COMBINED_GESTURE_AC_HOLD: 'Pinch thumb + middle hold',
-                COMBINED_GESTURE_AD_HOLD: 'Pinch thumb + ring hold',
-                COMBINED_GESTURE_AE_HOLD: 'Pinch thumb + pinky hold',
-                COMBINED_GESTURE_FIST_HOLD: 'Fist hold',
-            };
-            if (names[raw]) return names[raw];
-            const text = raw.replace(/_/g, ' ').toLowerCase();
-            return text ? text.charAt(0).toUpperCase() + text.slice(1) : raw;
-        }
-
-        function updateLiveAgo() {
-            if (!lastLiveAt) return;
-            const seconds = Math.floor((Date.now() - lastLiveAt) / 1000);
-            const ago = seconds < 2 ? 'just now' : `${seconds}s ago`;
-            liveLastMeta.textContent = `${lastLiveRaw} · ${ago}`;
-        }
-
-        function noteLiveEvent(message, type, time) {
-            if (type === 'tap' || type === 'gesture') {
-                const raw = message.replace(/^(Tap|Gesture):\s*/, '');
-                lastLiveRaw = raw;
-                lastLiveAt = Date.now();
-                liveLastKicker.textContent = type === 'tap' ? 'Last tap' : 'Last gesture';
-                liveLastValue.textContent = type === 'gesture' ? friendlyGestureName(raw) : raw;
-                updateLiveAgo();
-            }
-            if (type === 'tap' || type === 'gesture' || type === 'raw') {
-                const empty = recentList.querySelector('.recent-empty');
-                if (empty) empty.remove();
-                const row = document.createElement('div');
-                row.className = `recent-row ${type}`;
-                const timeEl = document.createElement('span');
-                timeEl.className = 'recent-time';
-                timeEl.textContent = time;
-                const msgEl = document.createElement('span');
-                msgEl.className = 'recent-msg';
-                msgEl.textContent = message;
-                row.append(timeEl, msgEl);
-                recentList.prepend(row);
-                while (recentList.children.length > 5) recentList.lastElementChild.remove();
-            }
         }
 
         function placeResponsiveNodes() {
             if (mobileMq.matches) {
-                liveStatsSlot.appendChild(liveStats);
                 sheetDeviceInfoSlot.appendChild(deviceInfoSection);
             } else {
-                controlsPane.appendChild(liveStats);
                 connectionBar.appendChild(deviceInfoSection);
                 closeSheet();
             }
@@ -1357,7 +1207,6 @@
             logEl.scrollTop = logEl.scrollHeight;
             eventCount += 1;
             updateLogCount();
-            noteLiveEvent(message, type, time);
         }
 
         function setPanelButtons(buttons, enabled) {
@@ -1701,15 +1550,9 @@
             logEl.innerHTML = '';
             eventCount = 0;
             updateLogCount();
-            recentList.innerHTML = '<div class="recent-empty">No events yet</div>';
-            lastLiveAt = 0;
-            lastLiveRaw = '';
-            liveLastKicker.textContent = 'Last event';
-            liveLastValue.textContent = 'No event yet';
-            liveLastMeta.textContent = 'Tap or make a gesture';
         });
 
-        setInterval(() => { updateStats(); updateLiveAgo(); }, 250);
+        setInterval(updateStats, 250);
 
         placeResponsiveNodes();
         updateLogCount();
