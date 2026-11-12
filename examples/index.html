@@ -361,6 +361,7 @@
         .warning-close { display: none; }
         .log-count { display: none; }
         .mobile-collapse-toggle { display: none; }
+        .pane-divider { display: none; }
         @media (max-width: 700px) {
             html, body { overflow: hidden; }
             body { overflow-x: hidden; }
@@ -467,10 +468,32 @@
                 min-height: 0;
                 display: grid;
                 grid-template-columns: minmax(0, 1fr);
-                grid-template-rows: minmax(0, auto) minmax(50dvh, 1fr);
+                grid-template-rows: minmax(0, auto) auto minmax(50dvh, 1fr);
                 gap: 8px;
                 padding: 2px calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
             }
+            .pane-divider {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 28px;
+                margin: -4px 0;
+                cursor: row-resize;
+                touch-action: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+            .pane-divider-grip {
+                width: 48px;
+                height: 5px;
+                border-radius: 3px;
+                background: #bbb;
+                pointer-events: none;
+            }
+            .pane-divider:active .pane-divider-grip,
+            .pane-divider:focus-visible .pane-divider-grip { background: #007bff; }
+            .pane-divider:focus-visible { outline: 2px solid #007bff; outline-offset: -2px; border-radius: 8px; }
+            .workspace.has-custom-rows .controls-pane { max-height: none; }
             .pane { min-width: 0; }
             .controls-pane {
                 padding: 8px 10px;
@@ -838,6 +861,10 @@
                 </div>
             </section>
 
+            <div id="paneDivider" class="pane-divider" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Drag to resize controls and event log" aria-valuemin="25" aria-valuemax="90" aria-valuenow="69" aria-valuetext="Event log height 69 percent">
+                <span class="pane-divider-grip" aria-hidden="true"></span>
+            </div>
+
             <section class="pane log-pane" aria-label="Event Log">
                 <div class="log-toolbar">
                     <div class="log-title-row">
@@ -1044,6 +1071,62 @@
             const collapsed = controlsPane.classList.toggle('is-collapsed');
             controlsToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             controlsToggle.setAttribute('aria-label', collapsed ? 'Expand controls box' : 'Collapse controls box');
+        });
+
+        // Draggable divider (phones only): drag down grows controls and shrinks
+        // the log, but the log never goes below 25% of the page height.
+        const workspaceEl = document.querySelector('.workspace');
+        const logPane = document.querySelector('.log-pane');
+        const paneDivider = document.getElementById('paneDivider');
+
+        function applyControlsHeight(px) {
+            const workspaceH = workspaceEl.getBoundingClientRect().height;
+            const dividerH = paneDivider.getBoundingClientRect().height || 28;
+            const minLogPx = Math.round(window.innerHeight * 0.25);
+            const maxControls = Math.max(56, workspaceH - dividerH - minLogPx - 16);
+            const clamped = Math.min(Math.max(px, 56), maxControls);
+            workspaceEl.classList.add('has-custom-rows');
+            workspaceEl.style.gridTemplateRows = `${clamped}px ${dividerH}px minmax(0, 1fr)`;
+            const logPct = Math.round((logPane.getBoundingClientRect().height / window.innerHeight) * 100);
+            paneDivider.setAttribute('aria-valuenow', String(logPct));
+            paneDivider.setAttribute('aria-valuetext', `Event log height ${logPct} percent`);
+            return clamped;
+        }
+
+        let dragStart = null;
+        paneDivider.addEventListener('pointerdown', (event) => {
+            if (!mobileMq.matches) return;
+            if (controlsPane.classList.contains('is-collapsed')) {
+                controlsPane.classList.remove('is-collapsed');
+                controlsToggle.setAttribute('aria-expanded', 'true');
+                controlsToggle.setAttribute('aria-label', 'Collapse controls box');
+            }
+            dragStart = {
+                y: event.clientY,
+                controlsH: controlsPane.getBoundingClientRect().height,
+            };
+            paneDivider.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+        paneDivider.addEventListener('pointermove', (event) => {
+            if (!dragStart) return;
+            applyControlsHeight(dragStart.controlsH + (event.clientY - dragStart.y));
+        });
+        const endDrag = () => { dragStart = null; };
+        paneDivider.addEventListener('pointerup', endDrag);
+        paneDivider.addEventListener('pointercancel', endDrag);
+        paneDivider.addEventListener('keydown', (event) => {
+            if (!mobileMq.matches) return;
+            const step = event.key === 'ArrowDown' ? 20 : event.key === 'ArrowUp' ? -20 : 0;
+            if (!step) return;
+            event.preventDefault();
+            applyControlsHeight(controlsPane.getBoundingClientRect().height + step);
+        });
+        window.addEventListener('resize', () => {
+            if (!mobileMq.matches) {
+                workspaceEl.classList.remove('has-custom-rows');
+                workspaceEl.style.gridTemplateRows = '';
+            }
         });
 
         function openSheet() {
