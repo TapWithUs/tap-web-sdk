@@ -51,12 +51,12 @@ Single-finger taps are the most reliable. Prefer them for frequent actions. Use 
 
 ## Turn on tap events
 
-- **`TapSDKWeb`**: `await sdk.setInputMode(new InputModeController())` after you register callbacks. `connect()` already started notifications. There is no `start()`.
+- **`TapSDKWeb`** (Tap Strap, stock TapXR): `await sdk.setInputMode(new InputModeController())` after you register callbacks. `connect()` already started notifications. There is no `start()`.
   - `new InputModeText()` (default): the Tap types letters into the focused field. The SDK gets no taps.
   - `new InputModeController()`: the SDK gets tap, mouse, and air-gesture events. No typing.
   - `new InputModeControllerText()`: both at the same time.
   - The SDK re-sends the mode every 10 s, so the device stays in it.
-- **`TapSDKWeb2`**: `setFeature(DeviceFeatures.MODEL_DETECTION, true)`, `setVisionSensorModel(ModelTypes.TAPPING)`, `setVisionSensorOpMode(VisionSensorOpModes.TRIGGER)`.
+- **`TapSDKWeb2`** (TapXR developer firmware; no Text mode or HID, tap detection off at boot): `setFeature(DeviceFeatures.MODEL_DETECTION, true)`, `setVisionSensorModel(ModelTypes.TAPPING)`, `setVisionSensorOpMode(VisionSensorOpModes.TRIGGER)`.
 
 ## Double taps and multi-taps
 

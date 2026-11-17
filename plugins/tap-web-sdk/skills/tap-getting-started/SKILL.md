@@ -5,7 +5,14 @@ description: First skill for any Tap web app. Call connect() from a button click
 
 # Tap getting started
 
-Works for both firmware classes. `connect()` returns `TapSDKWeb` (classic firmware) or `TapSDKWeb2` (framed firmware). Write code that handles both unless the user says which device they have. Do not call these "SDK v1" or "SDK v2".
+Works for both firmware classes. `connect()` returns `TapSDKWeb` (classic firmware) or `TapSDKWeb2` (framed firmware).
+
+| Device and firmware | Class | HID (keyboard / mouse) |
+|---------------------|-------|------------------------|
+| Tap Strap, Tap Strap 2 | `TapSDKWeb` | Yes. Boots in Text mode (types into the focused field). |
+| TapXR, stock firmware (default) | `TapSDKWeb` | Yes. Boots in Text mode. `setInputType` available. |
+| TapXR developer firmware (opt-in developer program) | `TapSDKWeb2` | **No.** No Text mode, no keyboard, no `setInputType`. Boots with tap detection off. |
+ Write code that handles both unless the user says which device they have. Do not call these "SDK v1" or "SDK v2".
 
 Devices: Tap Strap, Tap Strap 2, TapXR. TapBand uses the same BLE API and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). It is not for sale yet. Never describe it as unsupported, missing, or buyable. TapXR developer firmware supports the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). Do not invent a firmware version number.
 
@@ -14,7 +21,7 @@ Devices: Tap Strap, Tap Strap 2, TapXR. TapBand uses the same BLE API and is com
 - Which device: Tap Strap, Tap Strap 2, or TapXR? (TapBand uses the same API; waitlist if they ask to buy one.)
 - Is the Tap turned on and charged?
 - Is Tap Manager (or another app) holding the connection? Close it.
-- Is the firmware up to date (update it in the Tap Manager app)?
+- Is the firmware up to date (update it in the Tap Manager app)? For TapXR: stock firmware (the default) or the TapXR developer firmware?
 - Which browser: Chrome or Edge? The page must use HTTPS or localhost.
 
 ## 2. Install
@@ -90,7 +97,7 @@ Check the class with `isTapSDKWeb2(sdk)`.
 | User cancelled the picker | Catch the error and show it. Ask the user to click Connect again. |
 | Connected but no tap events (`TapSDKWeb`) | Call `setInputMode(new InputModeController())` after you register callbacks. |
 | Connected but no tap events (`TapSDKWeb2`) | Enable `MODEL_DETECTION` and set the `TAPPING` model with `TRIGGER` op mode. |
-| Letters appear in a text field when tapping | Device is in Text mode (`TapSDKWeb`). Set Controller mode. |
+| Letters appear in a text field when tapping | Device is in Text mode (`TapSDKWeb`: Tap Strap / stock TapXR). Set Controller mode. Cannot happen on the TapXR developer firmware (no HID). |
 | GATT service missing | Turn Bluetooth off and on. Close other apps that use the Tap. Click Connect again. |
 | Events stop | Keep the page open. Do not reload it. |
 

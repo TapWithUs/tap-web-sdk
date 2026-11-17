@@ -5,7 +5,7 @@ description: Switch the TapSDKWeb2 vision model between TAPPING and AIR_GESTURE,
 
 # Vision models and air gestures
 
-This SDK delivers **raw** gesture detections. Python, Web, iOS, and Android all receive those codes. iOS and Android add a processed click / drag / drop layer. This Web SDK does not. Never say swipes or pinches are iOS/Android-only.
+This SDK delivers **raw** gesture detections. Python, Web, and Android receive those codes. iOS and Android add a processed click / drag / drop layer (iOS exposes only that processed layer today). This Web SDK does not. Never say swipes or pinches are iOS/Android-only.
 
 TapXR developer firmware and TapBand use the same BLE API and the full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold. TapBand is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). Do not invent a firmware version number.
 
@@ -112,7 +112,7 @@ function onTap(_identifier: string, data: number[]): void {
 
 `DeviceFeatures.STANDBY_GESTURE_DETECTION` lets the user put the device in standby with a gesture. `registerStandbyStateEvents(cb(id, isStandby))` reports changes. `await sdk.setStandbyState(false)` wakes it. `await sdk.getStandbyState()` reads it.
 
-## TapSDKWeb air gestures (classic firmware)
+## TapSDKWeb air gestures (classic firmware: Tap Strap, stock TapXR)
 
 `TapSDKWeb` has no model switching. In `InputModeController()`, `registerAirGestureEvents` gives `cb(id, gesture: number)` that matches `AirGestures` (for example `UP_ONE_FINGER`, `LEFT_TWO_FINGERS`, `PINCH`, `THUMB_FINGER`, `STATE_FIST`). `registerAirGestureStateEvents` gives `cb(id, MouseModes)` when the air-mouse state changes.
 

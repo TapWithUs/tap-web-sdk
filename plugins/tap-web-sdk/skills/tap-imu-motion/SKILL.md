@@ -41,7 +41,7 @@ await sdk.setInputMode(new InputModeController());
 
 - `vx`, `vy`: signed velocities. `proximity`: `true` when a surface is detected (optical mouse on Tap Strap).
 - This callback does not include roll, pitch, or yaw. For orientation on `TapSDKWeb`, use raw IMU (`tap-raw-sensors`).
-- TapXR Spatial Control: `await sdk.setInputType(InputType.MOUSE)` forces air-mouse. `InputType.AUTO` returns to automatic.
+- TapXR on stock firmware only (`TapSDKWeb`): `await sdk.setInputType(InputType.MOUSE)` forces air-mouse. `InputType.AUTO` returns to automatic. `TapSDKWeb2` (TapXR developer firmware) has no `setInputType` and no HID mouse; use `IMU_MOTION_DATA`.
 
 ## Patterns
 

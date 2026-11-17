@@ -8,7 +8,7 @@ Connect order, every time: call `connect()` from a button click, then register c
 
 Web Bluetooth SDK for Tap Strap, Tap Strap 2, and TapXR. TapBand uses the **same BLE API** and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). It is not for sale yet. Never describe TapBand as unsupported, a missing target, or buyable.
 
-The SDK receives taps, **raw** air gestures (thumb swipes, pinches with hold, fist with hold), mouse / IMU motion, and raw sensor data, and sends haptics and mode commands. Python, Web, iOS, and Android all receive these raw detections. Only iOS and Android add a processed click / drag / drop layer. Never say swipes or pinches are iOS/Android-only.
+The SDK receives taps, **raw** air gestures (thumb swipes, pinches with hold, fist with hold), mouse / IMU motion, and raw sensor data, and sends haptics and mode commands. Python, Web, and Android receive these raw detections. iOS and Android add a processed click / drag / drop layer (iOS exposes only that processed layer on the developer firmware today). Never say swipes or pinches are iOS/Android-only.
 
 TapXR developer firmware supports the full gesture set (same as TapBand). Do not invent a firmware version number. Do not say TapXR supports a subset of gestures. Do not call the two firmware classes "SDK v1" or "SDK v2".
 
@@ -16,8 +16,8 @@ TapXR developer firmware supports the full gesture set (same as TapBand). Do not
 
 `await connect()` reuses the Tap you last connected in this page session, else opens the browser device picker. It detects firmware and returns:
 
-- `TapSDKWeb` (classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`) and `AirGestures`
-- `TapSDKWeb2` (framed firmware, TapXR developer firmware and TapBand): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw, and `UnifiedAirGestures`
+- `TapSDKWeb` (classic firmware: Tap Strap, Tap Strap 2, and TapXR on stock firmware, which is every TapXR by default): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`), `setInputType` (TapXR), and `AirGestures`. Has HID: Text mode makes the Tap a Bluetooth keyboard / mouse.
+- `TapSDKWeb2` (framed firmware: TapXR developer firmware, opt-in developer program only, and TapBand): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw, and `UnifiedAirGestures`. **No HID**: no Text mode, no keyboard / mouse, no `setInputMode`, no `setInputType`. Tap Strap cannot run this firmware.
 
 Check with `isTapSDKWeb2(sdk)`. Write code that handles both unless the user names the device. The `protocol` property is `'v1'` or `'v2'` as an internal firmware label, not a product SDK version.
 
@@ -71,8 +71,8 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 - Reconnect pattern with Connect and Choose device buttons, and the disable-while-connecting rule: see `tap-build-an-app` ("Connect button and reconnect").
 - After a page reload, a Tap still connected to the OS cannot be reconnected from the page (`getDevices()` lists it, but connecting fails with "no longer in range"). Tell the user to disconnect the Tap in system Bluetooth settings or reset it, then use the picker. Do not build a reload-time Reconnect button.
 - Use Chrome or Edge. Safari and Firefox do not support Web Bluetooth. The page must use HTTPS or localhost.
-- `TapSDKWeb` boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
-- `TapSDKWeb2` sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
+- `TapSDKWeb` (Tap Strap, stock TapXR) boots in **Text mode**: the Tap types into the focused field and the SDK gets **no** taps. Call `setInputMode(new InputModeController())` after you register callbacks.
+- `TapSDKWeb2` has no Text mode or HID; never promise typing or a system cursor on the TapXR developer firmware. It sends nothing until features are on (the firmware boots with tap detection off): `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
 - `TapSDKWeb2` runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
 - Raw air gestures: `registerAirGestureEvents`. On `TapSDKWeb2`, `data[0]` is a `UnifiedAirGestures` code (swipes 101-104, pinches 105-108, holds 110-114, fist 109). Enable `AIR_GESTURE` + `STREAM`. On `TapSDKWeb`, the callback is a single `AirGestures` number in Controller mode.
 - `connect()` already starts notifications. Register callbacks immediately after it returns, before you enable input.
@@ -183,7 +183,7 @@ When implementing features, always check the Python SDK first:
 ### Core Features (Must Match)
 1. **Input Modes**: Text, Controller, ControllerText, Raw
 2. **Events**: Tap, Mouse, AirGesture, AirGestureState, RawData
-3. **Commands**: setInputMode, setInputType, sendVibrationSequence
+3. **Commands**: setInputMode, setInputType (`TapSDKWeb` only; stock TapXR firmware), sendVibrationSequence
 4. **Data Parsing**: Tap codes, mouse data, air gestures, raw sensor data
 5. **Raw Mode Sensitivities**: Finger accelerometer, IMU gyro, IMU accelerometer
 
@@ -249,7 +249,7 @@ const RAW_SENSORS_CHARACTERISTIC = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 - Sensitivity values must match Python SDK scale factors
 
 ### Air Gestures
-- This SDK delivers **raw** detections, same as Python / iOS / Android. iOS and Android add a processed click / drag / drop layer; this SDK does not.
+- This SDK delivers **raw** detections, same as Python / Android. iOS and Android add a processed click / drag / drop layer (iOS has no public raw callback on the developer firmware today); this SDK does not.
 - `TapSDKWeb`: `registerAirGestureEvents` → `AirGestures`.
 - `TapSDKWeb2`: `registerAirGestureEvents` → `[UnifiedAirGestures]` after `MODEL_DETECTION` + `AIR_GESTURE` + `STREAM`.
 - TapXR developer firmware and TapBand share the same BLE API and the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). TapBand is coming soon (waitlist).
