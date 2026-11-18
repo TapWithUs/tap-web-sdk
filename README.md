@@ -2,19 +2,7 @@
 
 A TypeScript/JavaScript SDK for Tap devices in the browser, using Web Bluetooth. It works with [Tap Strap](https://www.tapwithus.com/) and [TapXR](https://www.tapwithus.com/). [TapBand](https://www.tapwithus.com/tapband-waitlist/) uses the same BLE API and is coming soon (waitlist). It is not for sale yet.
 
-TapXR developer firmware supports the full gesture set: taps, thumb swipes up / down / left / right, thumb-to-finger pinches with hold, and fist with hold. This SDK delivers those **raw** detections (the same codes as the Python and Android SDKs). iOS and Android add a processed click / drag / drop layer (on the developer firmware, iOS exposes only that processed layer today). This Web SDK does not.
-
-### Which firmware your Tap runs
-
-| Device and firmware | `connect()` returns | Keyboard / mouse (HID) | What your page controls |
-|---------------------|---------------------|------------------------|-------------------------|
-| Tap Strap, Tap Strap 2 | `TapSDKWeb` | Yes: Text mode, Controller + Text | Input modes (`setInputMode`) |
-| TapXR on stock firmware (every TapXR by default) | `TapSDKWeb` | Yes: Text mode, Controller + Text | Input modes, plus `setInputType` (Auto / Mouse / Keyboard) |
-| TapXR on the TapXR developer firmware (opt-in developer program) | `TapSDKWeb2` | **No.** No Text mode, no HID, no `setInputType` | `setFeature`, vision models, IMU motion, standby |
-
-- Tap Strap and stock TapXR firmware act as a Bluetooth keyboard and mouse. They boot in Text mode with tap detection on.
-- The TapXR developer firmware sends no HID at all: the Tap never types or moves the system cursor. It boots with tap detection off, so your page must enable `MODEL_DETECTION` and a vision model before taps arrive (the Quick Start does this).
-- Only TapXR owners who join the developer program move to the developer firmware. Tap Strap stays on stock firmware.
+TapXR developer firmware supports the full gesture set: taps, thumb swipes up / down / left / right, thumb-to-finger pinches with hold, and fist with hold. This SDK delivers those **raw** detections (the same codes as the Python, iOS, and Android SDKs). iOS and Android also add a processed click / drag / drop layer. This Web SDK does not.
 
 #### Try the [demo app](https://tapwithus.github.io/tap-web-sdk)
 
@@ -57,7 +45,7 @@ npm link @tapwithus/tapsdk
 
 ## Quick Start
 
-`connect()` detects firmware and returns `TapSDKWeb` (Tap Strap and stock TapXR firmware) or `TapSDKWeb2` (TapXR developer firmware). Handle both. Check with `isTapSDKWeb2(sdk)`.
+`connect()` detects firmware and returns `TapSDKWeb` (classic) or `TapSDKWeb2` (framed). Handle both. Check with `isTapSDKWeb2(sdk)`.
 
 ```typescript
 import {
@@ -76,7 +64,6 @@ document.querySelector('#connect')!.addEventListener('click', async () => {
     sdk.registerDisconnectionEvents((id) => console.log('Disconnected', id));
 
     if (isTapSDKWeb2(sdk)) {
-        // TapXR developer firmware: no HID, tap detection is off at boot.
         sdk.registerTapEvents((_id, tapcode) => console.log('Tap', tapcode[0]));
         sdk.registerAirGestureEvents((_id, data) => {
             const code = data[0];
@@ -88,7 +75,6 @@ document.querySelector('#connect')!.addEventListener('click', async () => {
         await sdk.setVisionSensorModel(ModelTypes.TAPPING);
         await sdk.setVisionSensorOpMode(VisionSensorOpModes.TRIGGER);
     } else {
-        // Tap Strap / stock TapXR: boots in Text mode (HID keyboard), which sends no taps.
         sdk.registerTapEvents((_id, tapcode) => console.log('Tap', tapcode));
         sdk.registerMouseEvents((_id, vx, vy, proximity) => {
             console.log(`Mouse: vx=${vx}, vy=${vy}, proximity=${proximity}`);
@@ -217,7 +203,7 @@ The `agents` target does not replace `AGENTS.md` in this repository. That file a
 
 ### TapSDKWeb
 
-Classic firmware: Tap Strap, Tap Strap 2, and TapXR on stock firmware. Input modes (`Text`, `Controller`, `ControllerText`, `Raw`). This is the only class with HID: in Text mode (the boot default) the Tap is a Bluetooth keyboard / mouse and sends no tap events to the page.
+Classic firmware. Input modes (`Text`, `Controller`, `ControllerText`, `Raw`).
 
 #### Static Methods
 
@@ -261,14 +247,12 @@ The package-level `connect()`, `connectToDevice(device)` and `getPermittedDevice
 |--------|-------------|
 | `getDeviceInfo()` | Read DIS/BAS + Tap device fields (`Promise<DeviceInfo>`) |
 | `setInputMode(mode)` | Set input mode (Text, Controller, ControllerText, Raw) |
-| `setInputType(type)` | Set the TapXR input type (Auto, Mouse, Keyboard). Stock TapXR firmware only; not on `TapSDKWeb2` |
+| `setInputType(type)` | Set input type for TapXR (Auto, Mouse, Keyboard) |
 | `sendVibrationSequence(durations)` | Send haptic feedback (array of durations in ms) |
 
 ### TapSDKWeb2
 
 Framed firmware (TapXR developer firmware and TapBand). Feature switches, vision models, IMU motion, and `UnifiedAirGestures`.
-
-**No HID.** `TapSDKWeb2` has no `setInputMode`, no Text mode, no keyboard / mouse output, and no `setInputType`. Calling those methods is a TypeScript error (runtime `TypeError` in plain JS). The firmware boots with tap detection off.
 
 | Method | Callback / notes |
 |--------|------------------|
@@ -316,7 +300,7 @@ await tap.setInputMode(new InputModeRaw({
 }));
 ```
 
-### Input Types (stock TapXR firmware, `TapSDKWeb` only)
+### Input Types (TapXR on `TapSDKWeb`)
 
 ```typescript
 import { InputType } from '@tapwithus/tapsdk';
@@ -326,7 +310,7 @@ await tap.setInputType(InputType.MOUSE);    // Mouse mode
 await tap.setInputType(InputType.KEYBOARD); // Keyboard mode
 ```
 
-The TapXR developer firmware (`TapSDKWeb2`) has no input type. Use `setVisionSensorModel` there.
+> **HID availability:** Text mode, keyboard/mouse (HID) input, and `setInputType` work only on the standard firmware (every Tap Strap, and TapXR by default), where `connect()` returns `TapSDKWeb`. TapXR on the developer firmware, which owners join through the developer program, has no HID: `connect()` returns `TapSDKWeb2`, so enable tap detection with `setFeature(DeviceFeatures.MODEL_DETECTION, true)` after connecting.
 
 ### Tap Codes
 
@@ -356,7 +340,7 @@ For roll / pitch / yaw, use `registerImuMotionDataEvents` on `TapSDKWeb2`.
 
 ### Air Gestures (raw detections)
 
-Python, Web, and Android receive the same **raw** gesture detections from the sensor. This SDK exposes them on `registerAirGestureEvents`. iOS and Android add a processed click / drag / drop layer (iOS exposes only that processed layer on the developer firmware today); this Web SDK does not. Swipes and pinches are not iOS/Android-only.
+Python, Web, iOS, and Android all receive the same **raw** gesture detections from the sensor. This SDK exposes them on `registerAirGestureEvents`. iOS and Android add a processed click / drag / drop layer; this Web SDK does not. Swipes and pinches are not iOS/Android-only.
 
 On `TapSDKWeb2` (TapXR developer firmware and TapBand), enable the air-gesture vision model, then read `UnifiedAirGestures` from `data[0]`. Verified against `tapIncMsg` (`air_gesture` → `[code]`) and the enum in `src/enumerations.ts`.
 
@@ -406,7 +390,7 @@ await sdk.setVisionSensorOpMode(VisionSensorOpModes.STREAM);
 
 Letters in pinch names: A = thumb, B = index, C = middle, D = ring, E = pinky. `AC` / `AD` / `AE` and `*_HOLD` are the other pinches.
 
-On `TapSDKWeb` (Tap Strap and stock TapXR firmware), Controller mode sends `AirGestures` as a single number (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, …):
+On `TapSDKWeb` (classic firmware), Controller mode sends `AirGestures` as a single number (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, …):
 
 ```typescript
 import { AirGestures } from '@tapwithus/tapsdk';
@@ -482,8 +466,8 @@ npx http-server -p 8000
 - **"HTTPS required"**: The example works on `localhost`, but if deploying, you need HTTPS
 - **Device picker does not open**: Call `connect()` from a button click
 - **Paired Tap missing from the picker after Disconnect**: In the same page, click Connect again: it reuses the last Tap (see "Reconnecting a Tap"). After a reload, disconnect the Tap in system Bluetooth settings or reset it, then pick it in the picker.
-- **No events appearing (`TapSDKWeb`)**: Switch to Controller Mode. Text Mode (the boot default on Tap Strap and stock TapXR) is HID keyboard / mouse only and never sends tap events to the SDK
-- **No events appearing (`TapSDKWeb2`)**: The TapXR developer firmware boots with tap detection off. Enable `MODEL_DETECTION` and set a vision model
+- **No events appearing (`TapSDKWeb`)**: Switch to Controller Mode. Text Mode may not generate tap events in the browser
+- **No events appearing (`TapSDKWeb2`)**: Enable `MODEL_DETECTION` and set a vision model
 
 ## Development
 

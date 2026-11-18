@@ -56,7 +56,7 @@ await sdk.setInputMode(new InputModeController());
 
 - To change sensitivity, leave raw mode first, then enter it again with new values. The SDK ignores a raw-to-raw change.
 - Raw streaming needs **Developer mode** turned on in Tap Manager.
-- Tap Strap streams finger accelerometers. Tap Strap 2 and TapXR on stock firmware also stream the thumb IMU. On the TapXR developer firmware (`TapSDKWeb2`), raw is the thumb IMU only, via `RAW_IMU_DATA`.
+- Tap Strap streams finger accelerometers. Tap Strap 2 and TapXR also stream the thumb IMU.
 
 ## Log to CSV
 

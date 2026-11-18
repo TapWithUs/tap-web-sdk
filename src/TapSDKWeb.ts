@@ -218,7 +218,6 @@ export class TapSDKWeb {
         await this.writeInputMode(command);
     }
 
-    /** Set the TapXR input type (Auto / Mouse / Keyboard). Stock TapXR firmware; not on `TapSDKWeb2`. */
     async setInputType(inputType: InputType): Promise<void> {
         this.inputType = inputType;
         const command = inputTypeCommand(inputType);
