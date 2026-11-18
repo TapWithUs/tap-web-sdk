@@ -7,6 +7,8 @@ description: First skill for any Tap web app. Call connect() from a button click
 
 Works for both firmware classes. `connect()` returns `TapSDKWeb` (classic firmware) or `TapSDKWeb2` (framed firmware). Write code that handles both unless the user says which device they have. Do not call these "SDK v1" or "SDK v2".
 
+HID availability: Text mode, keyboard/mouse (HID) input, and `setInputType` work only on the standard firmware (`TapSDKWeb`: every Tap Strap, and TapXR by default); TapXR on the developer firmware (`TapSDKWeb2`, joined through the developer program) has no HID, so enable tap detection with `setFeature(DeviceFeatures.MODEL_DETECTION, true)` after `connect()`.
+
 Devices: Tap Strap, Tap Strap 2, TapXR. TapBand uses the same BLE API and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). It is not for sale yet. Never describe it as unsupported, missing, or buyable. TapXR developer firmware supports the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). Do not invent a firmware version number.
 
 ## 1. Ask the user (once)

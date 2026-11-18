@@ -310,6 +310,8 @@ await tap.setInputType(InputType.MOUSE);    // Mouse mode
 await tap.setInputType(InputType.KEYBOARD); // Keyboard mode
 ```
 
+> **HID availability:** Text mode, keyboard/mouse (HID) input, and `setInputType` work only on the standard firmware (every Tap Strap, and TapXR by default), where `connect()` returns `TapSDKWeb`. TapXR on the developer firmware, which owners join through the developer program, has no HID: `connect()` returns `TapSDKWeb2`, so enable tap detection with `setFeature(DeviceFeatures.MODEL_DETECTION, true)` after connecting.
+
 ### Tap Codes
 
 Tap codes are 5-bit bitmaps representing which fingers tapped:
